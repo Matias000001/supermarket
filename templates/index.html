@@ -3,12 +3,24 @@
 <html>
 
 <head>
-  <title>Market</title>
+  <title>Keskustelu</title>
 </head>
 
 <body>
-  <h1>Etusivu</h1>
-  <p>Tähän tulee marketti</p>
+  <p>
+    Viestien määrä: {{ count }}
+  </p>
+  <hr />
+  {% for message in messages %}
+  <p>
+    {{ message.content }}
+  </p>
+  <hr />
+  {% endfor %}
+
+  <p>
+    <a href="/new">Lähetä viesti</a>
+  </p>
 </body>
 
-
+</html>
