@@ -1,26 +1,19 @@
 <!DOCTYPE html>
-
 <html>
+  <head>
+    <title>Kirjautuminen</title>
+  </head>
 
-<head>
-  <title>Keskustelu</title>
-</head>
-
-<body>
-  <p>
-    Viestien määrä: {{ count }}
-  </p>
-  <hr />
-  {% for message in messages %}
-  <p>
-    {{ message.content }}
-  </p>
-  <hr />
-  {% endfor %}
-
-  <p>
-    <a href="/new">Lähetä viesti</a>
-  </p>
-</body>
-
+  <body>
+    <h1>Verkkokauppa</h1>
+    {% if session.username %}
+    <p>Olet kirjautunut nimellä {{ session.username }}</p>
+    <a href="/logout">Logout</a>
+    {% else %}
+    <p>
+      <a href="/login">LOGIN</a>
+      <a href="/register">REGISTER</a>
+    </p>
+    {% endif %}
+  </body>
 </html>

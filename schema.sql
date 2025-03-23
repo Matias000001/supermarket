@@ -1,10 +1,5 @@
-CREATE TABLE visits (
+CREATE TABLE users (
     id INTEGER PRIMARY KEY,
-    visited_at TEXT
+    username TEXT UNIQUE,
+    password_hash TEXT
 );
-
-CREATE TABLE messages (
-    id INTEGER PRIMARY KEY,
-    content TEXT
-);
-
