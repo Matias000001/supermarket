@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>new_item</title>
+  </head>
+
+  <body>
+    <h1>New item</h1>
+    <form action="/create_item" method="post">
+      <p>
+        Title: <br />
+        <input type="text" name="title" />
+      </p>
+      <p>
+        Description: <br />
+        <textarea rows="8" cols="60" name="description"></textarea>
+      </p>
+      <p>
+        Start price: <br />
+        <input type="text" name="price" size="10" /> €
+      </p>
+      <input type="submit" value="Create" />
+    </form>
+  </body>
+</html>
