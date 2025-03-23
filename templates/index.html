@@ -7,8 +7,12 @@
   <body>
     <h1>Verkkokauppa</h1>
     {% if session.username %}
-    <p>Olet kirjautunut nimellä {{ session.username }}</p>
-    <a href="/logout">Logout</a>
+    <p>
+      Olet kirjautunut nimellä {{ session.username }}, id-numerosi on {{
+      session.id }}
+    </p>
+    <a href="/logout">Log out</a>
+    <a href="/new_item">New item</a>
     {% else %}
     <p>
       <a href="/login">LOGIN</a>

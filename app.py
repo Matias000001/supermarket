@@ -1,10 +1,9 @@
 import sqlite3
 from flask import Flask
 from flask import redirect, render_template, request, session
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import db
-import config 
+import config
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -13,14 +12,21 @@ app.secret_key = config.secret_key
 def index():
     return render_template("index.html")
 
-@app.route("/page1")
-def page1():
-    session["test"] = "aybabtu"
-    return "Istunto asetettu"
+@app.route("/new_item")
+def new_item():
+    return render_template("new_item.html")
 
-@app.route("/page2")
-def page2():
-    return "Tieto istunnosta: " + session["test"]
+@app.route("/create_item", methods=["POST"])
+def create_item():
+    title = request.form["title"]
+    description = request.form["description"]
+    price = request.form["price"]
+    user_id = session["id"]
+
+    sql = """INSERT INTO items (title, description, price, user_id) 
+          VALUES (?, ?, ?, ?)"""
+    db.execute(sql, [title, description, price, user_id])
+    return redirect("/")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -32,19 +38,21 @@ def login():
         password = request.form["password"]
 
         # SQL-kysely, joka hakee salasanan hashi käyttäjätunnuksella
-        sql = "SELECT password_hash FROM users WHERE username = ?"
-        result = db.query(sql, [username])
-
+        sql = "SELECT id, password_hash FROM users WHERE username = ?"
+        result = db.query(sql, [username])[0]
+        user_id = result["id"]
         # Tarkistetaan, löytyykö käyttäjää
         if result:
-            password_hash = result[0][0]  # Oletetaan, että ensimmäinen rivi on haluttu
+            password_hash = result["password_hash"]
             if check_password_hash(password_hash, password):
                 session["username"] = username
+                session["id"] = user_id
+
                 return redirect("/")
             else:
-                return "VIRHE: väärä tunnus tai salasana"
+                return "VIRHE: väärä salasana"
         else:
-            return "VIRHE: Käyttäjää ei löytynyt"
+            return "VIRHE: käyttäjätunnus ei löytynyt"
 
 @app.route("/logout")
 def logout():
@@ -60,8 +68,10 @@ def create():
     username = request.form["username"]
     password1 = request.form["password1"]
     password2 = request.form["password2"]
+    
     if password1 != password2:
         return "VIRHE: salasanat eivät ole samat"
+    
     password_hash = generate_password_hash(password1)
 
     try:
@@ -70,4 +80,4 @@ def create():
     except sqlite3.IntegrityError:
         return "VIRHE: tunnus on jo varattu"
 
-    return "User created"
+    return redirect("/")
