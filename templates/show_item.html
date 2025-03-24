@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ item.title }}</title>
+  </head>
+
+  <body>
+    <h1>{{ item.title }}</h1>
+    <p>{{ item.description }}</p>
+    <p>Lähtöhinta: {{ item.price }} €</p>
+    <p>Ilmoittaja: {{ item.username }} kpl</p>
+    <p>
+      <a href="/edit_item/{{ item.id }}">Edit</a>
+      <a href="/delete_item/{{ item.id }}">Delete</a>
+      <a href="/">Takaisin</a>
+    </p>
+  </body>
+</html>

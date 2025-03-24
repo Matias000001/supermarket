@@ -7,21 +7,27 @@
   <body>
     <h1>Web-shop</h1>
     {% if session.username %}
+
     <p>
       Olet kirjautunut nimellä {{ session.username }}, id-numerosi on {{
       session.id }}
     </p>
+   {% endif %}
+    <a href="/login">LOGIN</a>
     <a href="/logout">Log out</a>
-    <a href="/new_item">New item</a>
+    <a href="/register">REGISTER</a>
 
-    <h1>Messages</h1>
-
-    {% else %}
     <p>
-      <a href="/login">LOGIN</a>
-      <a href="/register">REGISTER</a>
+      <a href="/new_item">New item</a> 
     </p>
-    {% endif %}
     
+    <h1>Messages</h1>    
+    <ul> 
+    {% for item in items %}
+      <li>
+        <a href="/item/{{ item.id }}">{{ item.title }}</a>
+      </li>
+    {% endfor %}
+    </ul>
 
 </html>
