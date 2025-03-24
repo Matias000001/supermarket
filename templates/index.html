@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Kirjautuminen</title>
+    <title>shop</title>
   </head>
 
   <body>
-    <h1>Verkkokauppa</h1>
+    <h1>Web-shop</h1>
     {% if session.username %}
     <p>
       Olet kirjautunut nimellä {{ session.username }}, id-numerosi on {{
@@ -13,11 +13,15 @@
     </p>
     <a href="/logout">Log out</a>
     <a href="/new_item">New item</a>
+
+    <h1>Messages</h1>
+
     {% else %}
     <p>
       <a href="/login">LOGIN</a>
       <a href="/register">REGISTER</a>
     </p>
     {% endif %}
-  </body>
+    
+
 </html>
