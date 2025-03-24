@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>edit_item</title>
+  </head>
+
+  <body>
+    <h1>Edit item</h1>
+    <form action="/update_item" method="post">
+      <p>
+        Title: <br />
+        <input type="text" name="title" value="{{ item.title }}" />
+      </p>
+      <p>
+        Description: <br />
+        <textarea rows="8" cols="60" name="description">
+{{ item.description }}</textarea
+        >
+      </p>
+
+      <input type="hidden" name="item_id" value="{{ item.id }}" />
+      <input type="submit" value="Update" />
+    </form>
+  </body>
+</html>

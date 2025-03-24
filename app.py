@@ -14,21 +14,37 @@ def index():
     all_items = items.get_items()
     return render_template("index.html", items = all_items)
 
+
 @app.route("/new_item")
 def new_item():
     return render_template("new_item.html")
 
+@app.route("/update_item", methods=["POST"])
+def update_item():
+    title = request.form["title"]
+    description = request.form["description"]
+    item_id = request.form["item_id"]
+    items.update_item(item_id, title, description)  
+    return redirect(f"/item/{item_id}")
+
+@app.route("/edit_item/<int:item_id>")
+def edit_item(item_id):
+    item = items.get_item(item_id)
+    return render_template("edit_item.html", item=item)
+
 @app.route("/item/<int:item_id>")
 def show_item(item_id):
-    item = items.get_item(item_id)    
+    item = items.get_item(item_id)  
     return render_template("show_item.html", item = item)
+
+
 
 @app.route("/create_item", methods=["POST"])
 def create_item():
     title = request.form["title"]
     description = request.form["description"]
     price = request.form["price"]
-    user_id = session["id"]
+    user_id = session["id_user"]
 
     items.add_item(title, description, price, user_id)  
 
