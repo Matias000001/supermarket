@@ -5,27 +5,37 @@
   </head>
 
   <body>
-    <h1>Web-shop</h1>
+    <h2>Web-shop</h2>
+
     {% if session.username %}
+    <!-- Jos käyttäjä on kirjautunut -->
     <p>
       Olet kirjautunut nimellä {{ session.username }}, id-numerosi on {{
       session.get('id_user') }}
     </p>
-    <a href="/logout">Log out</a>
-    <a href="/new_item">New item</a>
+    <p>
+      <a href="/logout">Log out</a>
+    </p>
+
+    <p>
+      <a href="/new_item">New item</a>
+      <a href="/find_item">Find item</a>
+    </p>
+
+    <h2>Items</h2">
+
+    <ul>
+      {% for item in items %}
+       <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
+      {% else %}
+      <li>No items available</li>
+      {% endfor %}
+    </ul>
 
     {% else %}
+    <!-- Jos käyttäjä ei ole kirjautunut -->
     <a href="/login">LOGIN</a>
     <a href="/register">REGISTER</a>
     {% endif %}
-
-    <h1>Messages</h1>
-    <ul>
-      {% for item in items %}
-      <li>
-        <a href="/item/{{ item.id }}">{{ item.title }}</a>
-      </li>
-      {% endfor %}
-    </ul>
   </body>
 </html>

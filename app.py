@@ -16,26 +16,33 @@ def index():
 
 
 
+@app.route("/find_item")
+def find_item():
+    query = request.args.get("query")
+    if query:
+        items_found = items.find_items(query)
+    else:
+        query = ""
+        items_found = []
+    return render_template("find_item.html", query=query, results=items_found)
+
+
+
 @app.route("/new_item")
 def new_item():
     return render_template("new_item.html")
-
-
 
 @app.route("/remove_item/<int:item_id>", methods=["POST", "GET"])
 def remove_item(item_id):
     if request.method == "GET":
         item = items.get_item(item_id)
         return render_template("remove_item.html", item=item)
-
     if request.method == "POST":
         if "Remove" in request.form:
             items.remove_item(item_id)
             return redirect("/")
         else:
             return redirect(f"/item/{item_id}")
-
-
 
 @app.route("/update_item", methods=["POST"])
 def update_item():
@@ -50,10 +57,6 @@ def edit_item(item_id):
     item = items.get_item(item_id)
     return render_template("edit_item.html", item=item)
 
-
-
-
-
 @app.route("/item/<int:item_id>")
 def show_item(item_id):
     item = items.get_item(item_id)  
@@ -65,20 +68,16 @@ def create_item():
     description = request.form["description"]
     price = request.form["price"]
     user_id = session["id_user"]
-
     items.add_item(title, description, price, user_id)  
-
     return redirect("/")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
         return render_template("login.html")
-
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-
         # SQL-kysely, joka hakee salasanan hashi käyttäjätunnuksella
         sql = "SELECT id, password_hash FROM users WHERE username = ?"
         result = db.query(sql, [username])[0]
@@ -89,7 +88,6 @@ def login():
             if check_password_hash(password_hash, password):
                 session["username"] = username
                 session["id"] = user_id
-
                 return redirect("/")
             else:
                 return "VIRHE: väärä salasana"
@@ -110,16 +108,12 @@ def create():
     username = request.form["username"]
     password1 = request.form["password1"]
     password2 = request.form["password2"]
-    
     if password1 != password2:
         return "VIRHE: salasanat eivät ole samat"
-    
     password_hash = generate_password_hash(password1)
-
     try:
         sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
         db.execute(sql, [username, password_hash])
     except sqlite3.IntegrityError:
         return "VIRHE: tunnus on jo varattu"
-
     return redirect("/")

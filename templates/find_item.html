@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>find item</title>
+  </head>
+
+  <body>
+    <h2>Find item</h2>
+    <form action="/find_item" method="get">
+      <p>Search for: <input type="text" name="query" value="{{ query }}" /></p>
+      <input type="submit" value="search" />
+
+      <a href="/">Back</a>
+    </form>
+
+    {% if query %}
+    <h3>Results</h3>
+    <ul>
+      {% for item in results %}
+      <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
+      {% endfor %}
+    {% endif %}
+  </body>
+</html>
