@@ -31,6 +31,8 @@ def new_item():
 @app.route("/remove_item/<int:item_id>", methods=["POST", "GET"])
 def remove_item(item_id):
     item = items.get_item(item_id)
+    if not item:
+        abort(404)
     if item["user_id"] != session["id"]:
         abort(403)  # Forbidden
 
@@ -62,6 +64,8 @@ def update_item():
 @app.route("/edit_item/<int:item_id>")
 def edit_item(item_id):
     item = items.get_item(item_id)
+    if not item:
+        abort(404)
 
     if item["user_id"] != session["id"]:
         abort(403)  # Forbidden
@@ -72,6 +76,9 @@ def edit_item(item_id):
 @app.route("/item/<int:item_id>")
 def show_item(item_id):
     item = items.get_item(item_id)  
+    if not item:
+        abort(404) # Not Found
+
     return render_template("show_item.html", item = item)
 
 @app.route("/create_item", methods=["POST"])
