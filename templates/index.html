@@ -8,7 +8,7 @@
     <h2>Web-shop</h2>
 
     {% if session.username %}
-    <!-- Jos käyttäjä on kirjautunut -->
+    <!-- if user is logged in -->
     <p>
       Olet kirjautunut nimellä {{ session.username }}, id-numerosi on {{
       session.get('id') }}
@@ -33,7 +33,7 @@
     </ul>
 
     {% else %}
-    <!-- Jos käyttäjä ei ole kirjautunut -->
+    <!-- if user is not logged in -->
     <a href="/login">LOGIN</a>
     <a href="/register">REGISTER</a>
     {% endif %}

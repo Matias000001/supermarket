@@ -110,7 +110,7 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        # SQL-kysely, joka hakee salasanan hashi käyttäjätunnuksella
+        # SQL-query, get password using hash
         sql = "SELECT id, password_hash FROM users WHERE username = ?"
         result = db.query(sql, [username])
         if result:
