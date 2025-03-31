@@ -59,7 +59,11 @@ def update_item():
     if item["user_id"] != session["id"]:
         abort(403)
     title = request.form["title"]
+    if not title or len(title) > 50:
+        abort(403)
     description = request.form["description"]
+    if not description or len(description) > 1000:
+        abort(403)
     items.update_item(item_id, title, description)  
     return redirect(f"/item/{item_id}")
 
