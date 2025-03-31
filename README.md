@@ -16,3 +16,11 @@ Feature list 25.3
 * Käyttäjä pystyy lisäämään, sekä muokkaamaan ja poistamaan omia ilmoituksia.
 * Käyttäjä näkee sovellukseen lisätyt ilmoitukset.
 * Käyttäjä pystyy etsimään ilmoituksia hakusanalla tai muulla perusteella.
+
+Feature list 31.3
+* Käyttäjä pystyy luomaan tunnuksen ja kirjautumaan sisään sovellukseen.
+* Vain kirjautunut käyttäjä pystyy katselemaan ilmoituksia ja pääsemään kauppaan sisälle.
+* Käyttäjä pystyy lisäämään, sekä muokkaamaan ja poistamaan omia ilmoituksia.
+* Käyttäjä näkee sovellukseen lisätyt ilmoitukset.
+* Käyttäjä pystyy etsimään ilmoituksia hakusanalla tai muulla perusteella.
+* Estetty pääsy muokkaamaan tai poistamaan toisen käyttäjän ilmoituksia, eli lisätty oikeuksien tarkitukset

@@ -9,6 +9,11 @@ import items
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
+
+def require_login():
+    if "username" not in session:
+        abort(403)  # Forbidden
+
 @app.route("/")
 def index():
     all_items = items.get_items()
@@ -26,10 +31,13 @@ def find_item():
 
 @app.route("/new_item")
 def new_item():
+    require_login()
     return render_template("new_item.html")
 
 @app.route("/remove_item/<int:item_id>", methods=["POST", "GET"])
 def remove_item(item_id):
+    require_login()
+
     item = items.get_item(item_id)
     if not item:
         abort(404)
@@ -47,6 +55,8 @@ def remove_item(item_id):
 
 @app.route("/update_item", methods=["POST"])
 def update_item():
+    require_login()
+
     item_id = request.form["item_id"]
     item = items.get_item(item_id)
     if item["user_id"] != session["id"]:
@@ -59,10 +69,10 @@ def update_item():
 
     return redirect(f"/item/{item_id}")
 
-
-
 @app.route("/edit_item/<int:item_id>")
 def edit_item(item_id):
+    require_login()
+
     item = items.get_item(item_id)
     if not item:
         abort(404)
@@ -75,6 +85,7 @@ def edit_item(item_id):
 
 @app.route("/item/<int:item_id>")
 def show_item(item_id):
+    require_login()
     item = items.get_item(item_id)  
     if not item:
         abort(404) # Not Found
@@ -83,6 +94,8 @@ def show_item(item_id):
 
 @app.route("/create_item", methods=["POST"])
 def create_item():
+    require_login()
+
     title = request.form["title"]
     description = request.form["description"]
     price = request.form["price"]
@@ -116,7 +129,9 @@ def login():
 
 @app.route("/logout")
 def logout():
-    del session["username"]
+    if "username" in session:
+        del session["id"]
+        del session["username"]
     return redirect("/")
 
 @app.route("/register")
