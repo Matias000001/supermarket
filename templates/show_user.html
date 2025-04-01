@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Userpage {{ user.username }}</title>
+  </head>
+  <body>
+    <h1>Userpage {{ user.username }}</h1>
+    <p>Items on sale: {{ items | count }}</p>
+
+    <h2>Items</h2>
+    <ul>
+      {% for item in items %}
+      <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
+      {% endfor %}
+    </ul>
+
+    <p>
+      <a href="/">Back</a>
+      <a href="/messages">Messages</a>
+    </p>
+  </body>
+</html>

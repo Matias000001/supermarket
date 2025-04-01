@@ -16,8 +16,7 @@
 
     <p>{{ item.description | e}}</p>
     <p>Start price: {{ item.price | e}} €</p>
-    <p>Seller: {{ item.username | e}}</p>
-
+    <p>Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></p>
     <p>
       <a href="/">Back</a>
     </p>
