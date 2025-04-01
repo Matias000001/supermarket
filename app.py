@@ -27,7 +27,7 @@ def show_user(user_id):
     items = users.get_items(user_id)
     if not items:
         items = []
-    return render_template("show_user.html", user = user, items = items)
+    return render_template("show_user.html", user=user, items=items)
 
 @app.route("/find_item")
 def find_item():
@@ -42,7 +42,8 @@ def find_item():
 @app.route("/new_item")
 def new_item():
     require_login()
-    return render_template("new_item.html")
+    classes = items.get_all_classes()
+    return render_template("new_item.html", classes=classes)
 
 @app.route("/remove_item/<int:item_id>", methods=["POST", "GET"])
 def remove_item(item_id):
@@ -94,7 +95,7 @@ def show_item(item_id):
     if not item:
         abort(404)
     classes = items.get_classes(item_id)
-    return render_template("show_item.html", item = item , classes = classes)
+    return render_template("show_item.html", item=item , classes=classes)
 
 @app.route("/create_item", methods=["POST"])
 def create_item():
@@ -109,19 +110,13 @@ def create_item():
     if not re.search("^[1-9][0-9]{0,3}$", price):
         abort(403)
     user_id = session["id"]
-
     classes = []
-    section = request.form["section"]
-    if section:
-        classes.append(("Section", section))
-    condition = request.form["condition"]
-    if condition:
-        classes.append(("Condition", condition))
-
+    for entry in request.form.getlist("classes"):
+        if entry:
+            parts = entry.split(":")
+            classes.append((parts[0], parts[1]))
     items.add_item(title, description, price, user_id, classes)
     return redirect("/")
-
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
