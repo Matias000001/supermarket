@@ -93,7 +93,8 @@ def show_item(item_id):
     item = items.get_item(item_id)  
     if not item:
         abort(404)
-    return render_template("show_item.html", item = item)
+    classes = items.get_classes(item_id)
+    return render_template("show_item.html", item = item , classes = classes)
 
 @app.route("/create_item", methods=["POST"])
 def create_item():
@@ -108,8 +109,19 @@ def create_item():
     if not re.search("^[1-9][0-9]{0,3}$", price):
         abort(403)
     user_id = session["id"]
-    items.add_item(title, description, price, user_id)  
+
+    classes = []
+    section = request.form["section"]
+    if section:
+        classes.append(("Section", section))
+    condition = request.form["condition"]
+    if condition:
+        classes.append(("Condition", condition))
+
+    items.add_item(title, description, price, user_id, classes)
     return redirect("/")
+
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

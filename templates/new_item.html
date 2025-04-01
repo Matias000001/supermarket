@@ -20,6 +20,27 @@
         <input type="text" name="price" size="8" pattern="^[1-9][0-9]{0,3}$" />
         €
       </p>
+      <p>
+        Class: <br />
+        <select name="section" required>
+          <option value="choose">(choose)</option>
+          <option value="books">Books</option>
+          <option value="electronics">Electronics</option>
+          <option value="clothes">Clothes</option>
+          <option value="furniture">Furniture</option>
+          <option value="miscellaneous">Miscellaneous</option>
+        </select>
+      </p>
+      <p>
+        Condition: <br />
+        <select name="condition" required>
+          <option value="choose">(choose)</option>
+          <option value="new">New</option>
+          <option value="good">Good</option>
+          <option value="moderate">Moderate</option>
+          <option value="poor">Poor</option>
+        </select>
+      </p>
       <input type="submit" value="Create" />
       <a href="/">Back</a>
     </form>
