@@ -67,15 +67,30 @@ def update_item():
     require_login()
     item_id = request.form["item_id"]
     item = items.get_item(item_id)
+    if not item:
+        abort(404)
     if item["user_id"] != session["id"]:
         abort(403)
+
     title = request.form["title"]
     if not title or len(title) > 50:
         abort(403)
     description = request.form["description"]
     if not description or len(description) > 1000:
         abort(403)
-    items.update_item(item_id, title, description)  
+
+    all_classes = items.get_all_classes()
+
+    classes = []
+    for entry in request.form.getlist("classes"):
+        if entry:
+            parts = entry.split(":")
+            if parts[0] not in all_classes:
+                abort(403)
+            if parts[1] not in all_classes[parts[0]]:
+                abort(403)
+            classes.append((parts[0], parts[1]))
+    items.update_item(item_id, title, description, classes)
     return redirect(f"/item/{item_id}")
 
 @app.route("/edit_item/<int:item_id>")
@@ -86,7 +101,13 @@ def edit_item(item_id):
         abort(404)
     if item["user_id"] != session["id"]:
         abort(403)
-    return render_template("edit_item.html", item=item)
+    all_classes = items.get_all_classes()
+    classes = {}
+    for my_class in all_classes:
+        classes[my_class] = ""
+    for entry in items.get_classes(item_id):
+        classes[entry["title"]] = entry["value"]
+    return render_template("edit_item.html", item=item, classes=classes, all_classes=all_classes)
 
 @app.route("/item/<int:item_id>")
 def show_item(item_id):
@@ -110,11 +131,19 @@ def create_item():
     if not re.search("^[1-9][0-9]{0,3}$", price):
         abort(403)
     user_id = session["id"]
+
+    all_classes = items.get_all_classes()
+
     classes = []
     for entry in request.form.getlist("classes"):
         if entry:
             parts = entry.split(":")
+            if parts[0] not in all_classes:
+                abort(403)
+            if parts[1] not in all_classes[parts[0]]:
+                abort(403)
             classes.append((parts[0], parts[1]))
+
     items.add_item(title, description, price, user_id, classes)
     return redirect("/")
 

@@ -9,29 +9,26 @@
     <form action="/update_item" method="post">
       <p>
         Title: <br />
-        <input
-          type="text"
-          name="title"
-          value="{{ item.title }}"
-          maxlength="50"
-          required
-        />
+        <input type="text" name="title" value="{{ item.title }}" maxlength="50" required/>
       </p>
       <p>
-        Description: <br />
-        <textarea
-          rows="8"
-          cols="60"
-          name="description"
-          maxlength="1000"
-          required
-        >
-          {{ item.description | e }}
-{{ item.description }}</textarea
-        >
+        Description:<br />
+        <textarea rows="8" cols="60" name="description" maxlength="1000" required>{{item.description }}</textarea>
       </p>
-
-      <input type="hidden" name="item_id" value="{{ item.id }}" />
+      <input type="hidden" name="item_id" value="{{ item.id }}"/>
+      {% for class in all_classes %}
+      <p>
+        {{ class }}: <br />
+        <select name="classes">
+          {% for option in all_classes[class] %}
+          <option value="{{ class }}:{{ option }}"
+              {% if class in classes and classes[class] == option %}selected{% endif %}>
+              {{ option }}
+          </option>
+          {% endfor %}
+        </select>
+      </p>
+      {% endfor %}
       <input type="submit" value="Update" />
       <a href="/">Back</a>
     </form>
