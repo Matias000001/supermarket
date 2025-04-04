@@ -5,16 +5,16 @@
   </head>
 
   <body>
-    <h2>Web-shop</h2>
+    <h2>SUPERMARKET</h2>
 
     {% if session.username %}
     <!-- if user is logged in -->
     <p>
-      Olet kirjautunut nimellä {{ session.username }}, id-numerosi on {{
+      You are logged in by username {{ session.username }}. Your personal id-number is {{
       session.get('id') }}
     </p>
     <p>
-      <a href="/logout">Log out</a>
+      <a href="/user/{{ session.get('id') }}">Homepage</a>
     </p>
 
     <p>
@@ -22,7 +22,7 @@
       <a href="/find_item">Find item</a>
     </p>
 
-    <h2>Items</h2">
+    <h2>Products for sale in the Supermarket</h2>
 
     <ul>
       {% for item in items %}
@@ -31,6 +31,7 @@
       <li>No items available</li>
       {% endfor %}
     </ul>
+    <a href="/logout">Log out</a>
 
     {% else %}
     <!-- if user is not logged in -->

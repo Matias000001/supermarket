@@ -19,15 +19,24 @@ def index():
     all_items = items.get_items()
     return render_template("index.html", items = all_items)
 
+# TODO: kesken !!!
 @app.route("/user/<int:user_id>")
 def show_user(user_id):
     user = users.get_user(user_id)
     if not user:
         abort(404)
-    items = users.get_items(user_id)
-    if not items:
-        items = []
-    return render_template("show_user.html", user=user, items=items)
+    
+    # Hae käyttäjän myymät tuotteet (jos tarpeen)
+    user_items = users.get_items(user_id)
+    if not user_items:
+        user_items = []
+
+    # Hae käyttäjän ostokset ostoskorista
+    purchases = items.get_purchases(user_id)
+    print(items.get_purchases(10))
+
+    return render_template("show_user.html", user=user, items=user_items, purchases=purchases)
+
 
 @app.route("/find_item")
 def find_item():
@@ -71,16 +80,13 @@ def update_item():
         abort(404)
     if item["user_id"] != session["id"]:
         abort(403)
-
     title = request.form["title"]
     if not title or len(title) > 50:
         abort(403)
     description = request.form["description"]
     if not description or len(description) > 1000:
         abort(403)
-
     all_classes = items.get_all_classes()
-
     classes = []
     for entry in request.form.getlist("classes"):
         if entry:
@@ -131,9 +137,7 @@ def create_item():
     if not re.search("^[1-9][0-9]{0,3}$", price):
         abort(403)
     user_id = session["id"]
-
     all_classes = items.get_all_classes()
-
     classes = []
     for entry in request.form.getlist("classes"):
         if entry:
@@ -143,9 +147,27 @@ def create_item():
             if parts[1] not in all_classes[parts[0]]:
                 abort(403)
             classes.append((parts[0], parts[1]))
-
     items.add_item(title, description, price, user_id, classes)
     return redirect("/")
+
+@app.route("/create_purchase", methods=["POST"])
+def create_purchase():
+    require_login()
+    item_id = request.form["item_id"]
+    if not re.match("^[0-9]+$", item_id):
+        abort(403)
+    item = items.get_item(item_id)
+    if not item:
+        abort(403)
+    price = request.form["price"] # TODO: validointi ettei voi laitaa väärää hintaa
+    quantity = request.form["quantity"] # TODO validointi ettei voi laittaa väärää määrää
+    seller_id = request.form["seller_id"] # TODO validointi ettei voi laittaa väärää myyjä id
+    if not re.match("^[1-5]$", quantity):
+        abort(403)
+    user_id = session["id"]
+
+    items.add_purchase(item_id, user_id, seller_id, price, quantity)
+    return redirect("/item/" + str(item_id))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -154,7 +176,6 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-
         user_id = users.check_login(username, password)
         if user_id:
             session["username"] = username

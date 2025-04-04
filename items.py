@@ -20,6 +20,22 @@ def add_item(title, description, price, user_id, classes):
     for title, value in classes:
         db.execute(sql, [item_id, title, value])
 
+def add_purchase(item_id, user_id, seller_id, price, quantity):
+    sql = """INSERT INTO purchases (item_id, user_id, quantity, price_at_purchase, seller_id) 
+             VALUES (?, ?, ?, ?, ?)"""
+    db.execute(sql, [item_id, user_id, quantity, price, seller_id])
+
+def get_purchases(user_id):
+    sql = """SELECT p.id AS purchase_id,
+                    i.title AS item_title,
+                    p.quantity,
+                    p.price_at_purchase,
+                    (p.quantity * p.price_at_purchase) AS total_price
+             FROM purchases p
+             LEFT JOIN items i ON p.item_id = i.id
+             WHERE p.user_id = ? AND p.status = 'pending'"""
+    return db.query(sql, [user_id])
+
 def get_items():
     sql = "SELECT id, title FROM items ORDER BY id DESC"
     return db.query(sql)

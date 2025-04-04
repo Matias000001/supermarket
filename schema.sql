@@ -32,3 +32,14 @@ CREATE TABLE messages (
     user_id INTEGER REFERENCES users,
     thread_id INTEGER REFERENCES threads
 );
+
+CREATE TABLE purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id INTEGER REFERENCES items,
+    user_id INTEGER REFERENCES users,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    price_at_purchase INTEGER NOT NULL,
+    purchased_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    status TEXT CHECK (status IN ('pending', 'paid', 'shipped', 'delivered')) DEFAULT 'pending',
+    seller_id INTEGER REFERENCES users(id)
+);

@@ -4,15 +4,30 @@
     <title>Userpage {{ user.username }}</title>
   </head>
   <body>
-    <h1>Userpage {{ user.username }}</h1>
-    <p>Items on sale: {{ items | count }}</p>
+    <h2>Userpage {{ user.username }}</h2>
 
-    <h2>Items</h2>
+    <h3>Own products for sale: {{ items | count }}</h3>
     <ul>
       {% for item in items %}
-      <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
+        <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
       {% endfor %}
     </ul>
+
+    <h3>Your Shopping Basket</h3>
+    {% if purchases %}
+        <ul>
+        {% for purchase in purchases %}
+            <li>
+                <strong>{{ purchase.item_title }}</strong> ({{ purchase.quantity }}pcs) - 
+                {{ purchase.price_at_purchase }} € each - 
+                Total: {{ purchase.total_price }} €
+            </li>
+        {% endfor %}
+        </ul>
+        <h3>Total for all items: {{ purchases | sum(attribute='total_price') }} €</h3>
+    {% else %}
+        <p>Your shopping basket is empty.</p>
+    {% endif %}
 
     <p>
       <a href="/">Back</a>
