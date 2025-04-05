@@ -8,16 +8,12 @@
     <h2>SUPERMARKET</h2>
 
     {% if session.username %}
-    <!-- if user is logged in -->
     <p>
       You are logged in by username {{ session.username }}. Your personal id-number is {{
       session.get('id') }}
     </p>
     <p>
       <a href="/user/{{ session.get('id') }}">Homepage</a>
-    </p>
-
-    <p>
       <a href="/new_item">New item</a>
       <a href="/find_item">Find item</a>
     </p>
@@ -34,7 +30,7 @@
     <a href="/logout">Log out</a>
 
     {% else %}
-    <!-- if user is not logged in -->
+
     <a href="/login">LOGIN</a>
     <a href="/register">REGISTER</a>
     {% endif %}

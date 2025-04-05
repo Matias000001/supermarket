@@ -25,12 +25,14 @@ CREATE TABLE item_classes (
     value TEXT
 );
 
-CREATE TABLE messages (
-    id INTEGER PRIMARY KEY,
-    content TEXT,
-    sent_at TEXT,
-    user_id INTEGER REFERENCES users,
-    thread_id INTEGER REFERENCES threads
+CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    sender_id INTEGER,
+    recipient_id INTEGER,
+    FOREIGN KEY (sender_id) REFERENCES users(id),
+    FOREIGN KEY (recipient_id) REFERENCES users(id)
 );
 
 CREATE TABLE purchases (

@@ -4,7 +4,7 @@
     <title>Userpage {{ user.username }}</title>
   </head>
   <body>
-    <h2>Userpage {{ user.username }}</h2>
+    <h2>Userpage {{ user.username }} (id {{ session.get('id') }})</h2>
 
     <h3>Own products for sale: {{ items | count }}</h3>
     <ul>
@@ -15,23 +15,31 @@
 
     <h3>Your Shopping Basket</h3>
     {% if purchases %}
-        <ul>
+      <ul>
         {% for purchase in purchases %}
-            <li>
-                <strong>{{ purchase.item_title }}</strong> ({{ purchase.quantity }}pcs) - 
-                {{ purchase.price_at_purchase }} € each - 
-                Total: {{ purchase.total_price }} €
-            </li>
+          <li>
+            <strong>{{ purchase.item_title }}</strong> ({{ purchase.quantity }} pcs) -
+            {{ purchase.price_at_purchase }} € each -
+            Total: {{ purchase.total_price }} €
+          </li>
         {% endfor %}
-        </ul>
-        <h3>Total for all items: {{ purchases | sum(attribute='total_price') }} €</h3>
+      </ul>
+      <h3>Total for all items: {{ purchases | sum(attribute='total_price') }} €</h3>
     {% else %}
-        <p>Your shopping basket is empty.</p>
+      <p>Your shopping basket is empty.</p>
     {% endif %}
 
-    <p>
-      <a href="/">Back</a>
-      <a href="/messages">Messages</a>
-    </p>
+    <p><a href="/">Back</a></p>
+
+    {% if session.get('id') == user.id %}
+    <p><a href="/messages">Go to your messages</a></p>
+    {% else %}
+    <h3>Send a message to {{ user.username }}</h3>
+    <form method="post" action="/send_message/{{ user.id }}">
+        <textarea name="content"></textarea><br>
+        <button type="submit">Send</button>
+    </form>
+{% endif %}
+
   </body>
 </html>

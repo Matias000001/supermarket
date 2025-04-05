@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Messages</title>
+ </head>
+ <body>
+
+ <h2>Messages</h2>
+
+ {% for conversation in conversations %}
+ <div class="conversation">
+   <h3>Messages with user {{ conversation.partner_name }}:</h3>
+  
+  <div class="messages">
+   {% for msg in conversation.messages %}
+    <div class="message {% if msg.sender_id == session.id %}sent{% else %}received{% endif %}">
+     <div class="message-header">
+      {% if msg.sender_id == session.id %}You{% else %}{{ conversation.partner_name }}{% endif %}
+       ({{ msg.sent_at }}):
+     </div>
+    <div class="message-content">{{ msg.content }}</div>
+ </div>
+ {% endfor %}
+ </div>
+  <p></p>
+  <form action="/send_message/{{ conversation.partner_id }}" method="POST">
+   <textarea name="content" placeholder="Write a message to {{ conversation.partner_name }}" required></textarea>
+    <p></p>
+     <div class="form-actions">
+     <button type="submit">Send</button>
+     </div>
+  </form>
+  <p></p>
+  <form action="/delete_conversation/{{ conversation.partner_id }}" method="POST" style="display: inline;">
+   <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want delete messages?')">
+    Delete conversation
+   </button>
+  </form>
+ </div>
+ {% endfor %}
+ <p></p>
+ <a href="/user/{{ session.get('id') }}">Back</a>
+</body>

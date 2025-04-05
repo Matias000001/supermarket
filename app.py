@@ -1,6 +1,7 @@
 import sqlite3
 from flask import Flask
 from flask import abort, redirect, render_template, request, session
+from cryptography.fernet import Fernet
 import db
 import config
 import items
@@ -8,7 +9,14 @@ import re
 import users
 
 app = Flask(__name__)
-app.secret_key = config.secret_key
+app.secret_key = config.SECRET_KEY
+
+# Lue avain tiedostosta
+with open("keyfile.key", "rb") as key_file:
+    key = key_file.read()
+
+# Käytä avainta Fernet-objektin luomiseen
+fernet = Fernet(key)
 
 def require_login():
     if "username" not in session:
@@ -207,3 +215,80 @@ def create():
     except sqlite3.IntegrityError:
         return "Error: Name is already taken"
     return render_template("index.html")
+
+
+# TODO: siirrä erilliseen tiedostoon
+@app.route("/messages")
+def messages():
+    user_id = session.get('id')
+    if not user_id:
+        return redirect("/login")
+
+    sql = """WITH conversation_partners AS (
+                 SELECT
+                     CASE
+                         WHEN sender_id = ? THEN recipient_id
+                         ELSE sender_id
+                     END AS partner_id,
+                     MAX(sent_at) AS last_message_time
+                 FROM messages
+                 WHERE sender_id = ? OR recipient_id = ?
+                 GROUP BY partner_id
+             )
+             SELECT
+                 u.id AS partner_id,
+                 u.username AS partner_name,
+                 m.id AS message_id,
+                 m.content,
+                 datetime(m.sent_at) AS sent_at,
+                 m.sender_id
+             FROM conversation_partners cp
+             JOIN users u ON cp.partner_id = u.id
+             JOIN messages m ON (
+                 (m.sender_id = ? AND m.recipient_id = cp.partner_id) OR
+                 (m.sender_id = cp.partner_id AND m.recipient_id = ?)
+             )
+             ORDER BY cp.last_message_time DESC, m.sent_at ASC"""
+
+    messages = db.query(sql, [user_id, user_id, user_id, user_id, user_id])
+
+    conversations = {}
+    for msg in messages:
+        partner_id = msg['partner_id']
+        if partner_id not in conversations:
+            conversations[partner_id] = {
+                'partner_id': partner_id,
+                'partner_name': msg['partner_name'],
+                'messages': []
+            }
+
+        decrypted_content = fernet.decrypt(msg['content'].encode()).decode()
+        conversations[partner_id]['messages'].append({
+            'id': msg['message_id'],
+            'content': decrypted_content,
+            'sent_at': msg['sent_at'],
+            'sender_id': msg['sender_id']
+        })
+
+    conversation_list = list(conversations.values())
+    return render_template("messages.html", conversations=conversation_list)
+
+@app.route("/send_message/<int:recipient_id>", methods=["POST"])
+def send_message(recipient_id):
+    if 'id' not in session:
+        return redirect("/login")
+    content = request.form['content']
+    sender_id = session['id']
+    encrypted_content = fernet.encrypt(content.encode()).decode()
+    sql = "INSERT INTO messages (content, sender_id, recipient_id) VALUES (?, ?, ?)"
+    db.execute(sql, [encrypted_content, sender_id, recipient_id])
+    return redirect("/messages")
+
+@app.route("/delete_conversation/<int:partner_id>", methods=["POST"])
+def delete_conversation(partner_id):
+    if 'id' not in session:
+        return redirect("/login")
+    user_id = session['id']
+    sql = "DELETE FROM messages WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)"
+    db.execute(sql, [user_id, partner_id, partner_id, user_id])
+    return redirect("/messages")
