@@ -10,6 +10,25 @@
       session.get('id') }}.
     </p>
     {% endif %}
+    <h2>SUPERMARKET</h2>
+
+    {% if session.username %}
+    <p>
+      <a href="/">Mainpage</a>
+      <a href="/new_item">New item</a>
+      <a href="/find_item">Find item</a>
+      <a href="/logout">Log out</a>
+      {% if session.get('id') == user.id %}
+       <a href="/messages">Messages</a></p>
+      {% else %}
+      <h3>Send a message to {{ user.username }}</h3>
+      <form method="post" action="/send_message/{{ user.id }}">
+       <textarea name="content"></textarea><br>
+       <button type="submit">Send</button>
+      </form>
+    {% endif %}
+    </p>
+    {% endif %}
     <h2>Userpage {{ user.username }}</h2>
     <h3>Own products for sale: {{ items | count }}</h3>
     <ul>
@@ -41,15 +60,5 @@
       <p>Your shopping basket is empty.</p>
     {% endif %}
 
-    <p><a href="/">Back</a>
-    {% if session.get('id') == user.id %}
-      <a href="/messages">Messages</a></p>
-    {% else %}
-      <h3>Send a message to {{ user.username }}</h3>
-      <form method="post" action="/send_message/{{ user.id }}">
-          <textarea name="content"></textarea><br>
-          <button type="submit">Send</button>
-      </form>
-    {% endif %}
   </body>
 </html>

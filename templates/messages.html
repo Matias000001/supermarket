@@ -4,11 +4,19 @@
   <title>Messages</title>
  </head>
  <body>
-    <p>
-        You are logged in by username {{ session.username }}. Your personal ID-number is {{
-        session.get('id') }}.
-      </p>
- <h2>Messages</h2>
+  <p>
+   You are logged in by username {{ session.username }}. Your personal ID-number is {{
+   session.get('id') }}.
+  </p>
+  <h2>SUPERMARKET</h2>
+  <p>
+    <a href="/user/{{ session.get('id') }}">Homepage</a>
+    <a href="/new_item">New item</a>
+    <a href="/find_item">Find item</a>
+    <a href="/logout">Log out</a>
+  </p>
+
+  <h2>Messages</h2>
 
  {% for conversation in conversations %}
  <div class="conversation">
@@ -35,5 +43,6 @@
  </div>
  {% endfor %}
  <p></p>
- <a href="/user/{{ session.get('id') }}">Back</a>
+ <a href="/">Mainpage</a>
+ <a href="/user/{{ session.get('id') }}">Homepage</a>
 </body>

@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask
+from flask import Flask, flash
 from flask import abort, redirect, render_template, request, session
 from cryptography.fernet import Fernet
 import db
@@ -11,12 +11,10 @@ import users
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
-# Lue avain tiedostosta
 with open("keyfile.key", "rb") as key_file:
     key = key_file.read()
-
-# Käytä avainta Fernet-objektin luomiseen
 fernet = Fernet(key)
+
 
 def require_login():
     if "username" not in session:
@@ -27,24 +25,17 @@ def index():
     all_items = items.get_items()
     return render_template("index.html", items = all_items)
 
-# TODO: kesken !!!
 @app.route("/user/<int:user_id>")
 def show_user(user_id):
     user = users.get_user(user_id)
     if not user:
         abort(404)
-    
-    # Hae käyttäjän myymät tuotteet (jos tarpeen)
     user_items = users.get_items(user_id)
     if not user_items:
         user_items = []
-
-    # Hae käyttäjän ostokset ostoskorista
     purchases = items.get_purchases(user_id)
     print(items.get_purchases(10))
-
     return render_template("show_user.html", user=user, items=user_items, purchases=purchases)
-
 
 @app.route("/find_item")
 def find_item():
@@ -130,23 +121,29 @@ def show_item(item_id):
     if not item:
         abort(404)
     classes = items.get_classes(item_id)
-    return render_template("show_item.html", item=item , classes=classes)
+    return render_template("show_item.html", item=item, classes=classes)
 
 @app.route("/create_item", methods=["POST"])
 def create_item():
     require_login()
     title = request.form["title"]
+    description = request.form["description"]
+    price = request.form["price"]
+    quantity = request.form.get("quantity", "1")
+
     if not title or len(title) > 50:
         abort(403)
-    description = request.form["description"]
     if not description or len(description) > 1000:
         abort(403)
-    price = request.form["price"]
     if not re.search("^[1-9][0-9]{0,3}$", price):
         abort(403)
+    if not quantity.isdigit() or int(quantity) < 1:
+        abort(403)
+
     user_id = session["id"]
     all_classes = items.get_all_classes()
     classes = []
+
     for entry in request.form.getlist("classes"):
         if entry:
             parts = entry.split(":")
@@ -155,7 +152,7 @@ def create_item():
             if parts[1] not in all_classes[parts[0]]:
                 abort(403)
             classes.append((parts[0], parts[1]))
-    items.add_item(title, description, price, user_id, classes)
+    items.add_item(title, description, price, quantity, user_id, classes)
     return redirect("/")
 
 @app.route("/create_purchase", methods=["POST"])
@@ -167,14 +164,14 @@ def create_purchase():
     item = items.get_item(item_id)
     if not item:
         abort(403)
-    price = request.form["price"] # TODO: validointi ettei voi laitaa väärää hintaa
-    quantity = request.form["quantity"] # TODO validointi ettei voi laittaa väärää määrää
-    seller_id = request.form["seller_id"] # TODO validointi ettei voi laittaa väärää myyjä id
+    price = request.form["price"]
+    quantity = request.form["quantity"]
+    seller_id = request.form["seller_id"]
     if not re.match("^[1-5]$", quantity):
         abort(403)
     user_id = session["id"]
-
     items.add_purchase(item_id, user_id, seller_id, price, quantity)
+    flash(f"Tuote lisätty ostoskoriin ({quantity} kpl)", category="success")
     return redirect("/item/" + str(item_id))
 
 @app.route("/login", methods=["GET", "POST"])
@@ -217,7 +214,7 @@ def create():
     return render_template("index.html")
 
 
-# TODO: siirrä erilliseen tiedostoon
+# TODO: siirrä sql-kyselyt erilliseen tiedostoon
 @app.route("/messages")
 def messages():
     user_id = session.get('id')
@@ -249,7 +246,6 @@ def messages():
                  (m.sender_id = cp.partner_id AND m.recipient_id = ?)
              )
              ORDER BY cp.last_message_time DESC, m.sent_at ASC"""
-
     messages = db.query(sql, [user_id, user_id, user_id, user_id, user_id])
 
     conversations = {}
@@ -292,8 +288,6 @@ def delete_conversation(partner_id):
     sql = "DELETE FROM messages WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)"
     db.execute(sql, [user_id, partner_id, partner_id, user_id])
     return redirect("/messages")
-
-
 
 @app.route('/update_basket', methods=['POST'])
 def update_basket():

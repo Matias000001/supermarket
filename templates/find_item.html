@@ -5,11 +5,24 @@
   </head>
 
   <body>
+    {% if session.username %}
+    <p>
+      You are logged in by username {{ session.username }}. Your personal ID-number is {{
+      session.get('id') }}.
+    </p>
+    {% endif %}
+    <h2>SUPERMARKET</h2>
+    <p>
+      <a href="/">Mainpage</a>
+      <a href="/user/{{ session.get('id') }}">Homepage</a>
+      <a href="/new_item">New item</a>
+      <a href="/logout">Log out</a>
+    </p>
+
     <h2>Find item</h2>
     <form action="/find_item" method="get">
       <p>Search for: <input type="text" name="query" value="{{ query }}" /></p>
       <input type="submit" value="search" />
-      <a href="/">Back</a>
     </form>
 
     {% if query %}

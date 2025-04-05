@@ -2,53 +2,78 @@
 <html>
   <head>
     <title>{{ item.title }}</title>
+    <style>
+      .success-message {
+        background-color: #dff0d8;
+        color: #3c763d;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #d6e9c6;
+      }
+    </style>
   </head>
   <body>
-    <p>
-      You are logged in by username {{ session.username }}. Your personal ID-number is {{
-      session.get('id') }}.
-    </p>
-    <h1>{{ item.title }}</h1>
-    {% if session.get("id") == item.user_id %}
-
-    <p>
-      <a href="/edit_item/{{ item.id }}">Edit</a>
-      <a href="/remove_item/{{ item.id }}">Delete</a>
-    </p>
-
+    {% with messages = get_flashed_messages(category_filter=["success"]) %}
+    {% if messages %}
+      <div class="success-message">
+        {% for message in messages %}
+          {{ message }}
+        {% endfor %}
+      </div>
     {% endif %}
+  {% endwith %}
 
+    <p>
+      You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.
+    </p>
+    <h2>SUPERMARKET</h2>
+    <h3>{{ item.title }}</h3>
     <p>{{ item.description | e}}</p>
     <p>Price: {{ item.price | e}} €</p>
+    <p>Available: {{ item.quantity }} pcs</p>
     <p>Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></p>
     
     {% if classes %}
     <p>
       Classes:
-    <ul>
-      {% for class in classes %}
-      <li>{{ class.title }}: {{ class.value }}</li>
-      {% endfor %}
-    </ul>
+      <ul>
+        {% for class in classes %}
+        <li>{{ class.title }}: {{ class.value }}</li>
+        {% endfor %}
+      </ul>
     </p>
     {% endif %}
-    <form action="/create_purchase" method="post">
-      Pcs:
-      <select name="quantity" required>
+
+    {% if session.get("id") != item.user_id %}
+      {% if item.quantity > 0 %}
+      <form action="/create_purchase" method="post">
+        Pcs:
+        <select name="quantity" required>
           <option value="" disabled selected>Select quantity</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-      </select>
-      <input type="hidden" name="item_id" value="{{ item.id }}"/>
-      <input type="hidden" name="price" value="{{ item.price }}"/>
-      <input type="hidden" name="seller_id" value="{{ item.user_id }}"/>  <!-- Lisätty myyjän ID -->
-      <input type="submit" value="Add to basket" />
-    </form>
+          {% for i in range(1, [item.quantity, 5]|min + 1) %}
+          <option value="{{ i }}">{{ i }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="item_id" value="{{ item.id }}"/>
+        <input type="hidden" name="price" value="{{ item.price }}"/>
+        <input type="hidden" name="seller_id" value="{{ item.user_id }}"/>
+        <input type="submit" value="Add to basket" />
+      </form>
+      {% else %}
+      <p>This product is currently out of stock.</p>
+      {% endif %}
+    {% endif %}
+
+    {% if session.get("id") == item.user_id %}
     <p>
-      <a href="/">Back</a>
+      <a href="/edit_item/{{ item.id }}">Edit</a>
+      <a href="/remove_item/{{ item.id }}">Delete</a>
+    </p>
+    {% endif %}
+
+    <p>
+      <a href="/">Mainpage</a>
+      <a href="/user/{{ session.get('id') }}">Homepage</a>
     </p>
   </body>
 </html>

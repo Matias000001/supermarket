@@ -5,7 +5,14 @@
   </head>
 
   <body>
-    <h1>Edit item</h1>
+    {% if session.username %}
+    <p>
+      You are logged in by username {{ session.username }}. Your personal ID-number is {{
+      session.get('id') }}.
+    </p>
+    {% endif %}
+    <h2>SUPERMARKET</h2>
+    <h2>Edit item</h2>
     <form action="/update_item" method="post">
       <p>
         Title: <br />
@@ -30,7 +37,10 @@
       </p>
       {% endfor %}
       <input type="submit" value="Update" />
-      <a href="/">Back</a>
+      <p>
+      <a href="/">Mainpage</a>
+      <a href="/item/{{ item.id }}">Back</a>
+      </p>
     </form>
   </body>
 </html>

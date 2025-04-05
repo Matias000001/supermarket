@@ -5,7 +5,18 @@
   </head>
 
   <body>
-    <h1>New item</h1>
+    <p>
+      You are logged in by username {{ session.username }}. Your personal ID-number is {{
+      session.get('id') }}.
+    </p>
+    <h2>SUPERMARKET</h2>
+    <p>
+      <a href="/">Mainpage</a>
+      <a href="/user/{{ session.get('id') }}">Homepage</a>
+      <a href="/find_item">Find item</a>
+      <a href="/logout">Log out</a>
+    </p>
+    <h2>New item</h2>
     <form action="/create_item" method="post">
       <p>
         Title: <br />
@@ -16,8 +27,12 @@
         <textarea rows="8" cols="60" name="description" required></textarea>
       </p>
       <p>
-        Start price: <br />
-        <input type="text" name="price" size="8" pattern="^[1-9][0-9]{0,3}$" />€
+        Price: <br />
+        <input type="text" name="price" size="8" pattern="^[1-9][0-9]{0,3}$" /> €
+      </p>
+      <p>
+        Quantity available: <br />
+        <input type="number" name="quantity" min="1" value="1" required />
       </p>
       {% for class in classes %}
       <p>
@@ -31,7 +46,6 @@
       </p>
       {% endfor %}
       <input type="submit" value="Create" />
-      <a href="/">Back</a>
     </form>
   </body>
 </html>

@@ -10,10 +10,9 @@ def get_all_classes():
         classes[title].append(value)
     return classes
 
-def add_item(title, description, price, user_id, classes):
-    sql = """INSERT INTO items (title, description, price, user_id) 
-          VALUES (?, ?, ?, ?)"""
-    db.execute(sql, [title, description, price, user_id])
+def add_item(title, description, price, quantity, user_id, classes):
+    sql = "INSERT INTO items (title, description, price, quantity, user_id) VALUES (?, ?, ?, ?, ?)"
+    db.execute(sql, [title, description, price, quantity, user_id])
     item_id = db.last_insert_id()
 
     sql = "INSERT INTO item_classes (item_id, title, value) VALUES (?, ?, ?)"
@@ -26,42 +25,37 @@ def add_purchase(item_id, user_id, seller_id, price, quantity):
     db.execute(sql, [item_id, user_id, quantity, price, seller_id])
 
 def get_purchases(user_id):
-    sql = """SELECT p.id AS purchase_id,
-                    i.title AS item_title,
-                    p.quantity,
-                    p.price_at_purchase,
+    sql = """SELECT p.id AS purchase_id, i.title AS item_title, p.quantity, p.price_at_purchase,
                     (p.quantity * p.price_at_purchase) AS total_price
-             FROM purchases p
-             LEFT JOIN items i ON p.item_id = i.id
-             WHERE p.user_id = ? AND p.status = 'pending'"""
+                    FROM purchases p
+                    LEFT JOIN items i ON p.item_id = i.id
+                    WHERE p.user_id = ? AND p.status = 'pending'"""
     return db.query(sql, [user_id])
 
 def get_items():
-    sql = "SELECT id, title FROM items ORDER BY id DESC"
+    sql = "SELECT id, title, quantity FROM items ORDER BY id DESC"
     return db.query(sql)
 
 def get_classes(item_id):
     sql = """SELECT title, value 
-             FROM item_classes
-             WHERE item_id = ?"""
+                    FROM item_classes
+                    WHERE item_id = ?"""
     return db.query(sql, [item_id])
 
 def get_item(item_id):
-    sql = """SELECT items.id,
-                    items.title, 
-                    items.description, 
-                    items.price, 
-                    users.id user_id,
-                    users.username 
-            FROM items,users 
-            WHERE items.user_id = users.id AND
-                    items.id = ?"""
+    sql = """SELECT i.id, i.title, i.description, i.price, i.quantity,
+                    u.id AS user_id, u.username
+                    ROM items i
+                    JOIN users u ON i.user_id = u.id
+                    WHERE i.id = ?"""
     result = db.query(sql, [item_id])
-    return result[0] if result else None
+    if result:
+        item = dict(result[0])
+        return item
+    return None
 
 def update_item(item_id, title, description, classes):
-    sql = """UPDATE items SET title = ?, description = ? 
-            WHERE id = ?"""
+    sql = "UPDATE items SET title = ?, description = ? WHERE id = ?"
     db.execute(sql, [title, description, item_id])
 
     sql = "DELETE FROM item_classes WHERE item_id = ?"
@@ -80,8 +74,8 @@ def remove_item(item_id):
 
 def find_items(query):
     sql = """SELECT id, title
-             FROM items
-             WHERE title LIKE ? OR description LIKE ?
-             ORDER BY id DESC"""
+                    FROM items
+                    WHERE title LIKE ? OR description LIKE ?
+                    ORDER BY id DESC"""
     like = "%" + query + "%"
     return db.query(sql, [like, like])
