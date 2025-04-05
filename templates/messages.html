@@ -4,7 +4,10 @@
   <title>Messages</title>
  </head>
  <body>
-
+    <p>
+        You are logged in by username {{ session.username }}. Your personal ID-number is {{
+        session.get('id') }}.
+      </p>
  <h2>Messages</h2>
 
  {% for conversation in conversations %}
@@ -24,17 +27,10 @@
  </div>
   <p></p>
   <form action="/send_message/{{ conversation.partner_id }}" method="POST">
-   <textarea name="content" placeholder="Write a message to {{ conversation.partner_name }}" required></textarea>
-    <p></p>
-     <div class="form-actions">
-     <button type="submit">Send</button>
-     </div>
-  </form>
-  <p></p>
-  <form action="/delete_conversation/{{ conversation.partner_id }}" method="POST" style="display: inline;">
-   <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want delete messages?')">
-    Delete conversation
-   </button>
+    <textarea name="content" placeholder="Write a message to {{ conversation.partner_name }}" required></textarea><br>
+    <button type="submit">Send</button>
+    <button type="submit" formaction="/delete_conversation/{{ conversation.partner_id }}"
+            onclick="return confirm('Are you sure?')">Delete conversation</button>
   </form>
  </div>
  {% endfor %}

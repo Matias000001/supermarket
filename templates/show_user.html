@@ -4,8 +4,13 @@
     <title>Userpage {{ user.username }}</title>
   </head>
   <body>
-    <h2>Userpage {{ user.username }} (id {{ session.get('id') }})</h2>
-
+    {% if session.username %}
+    <p>
+      You are logged in by username {{ session.username }}. Your personal ID-number is {{
+      session.get('id') }}.
+    </p>
+    {% endif %}
+    <h2>Userpage {{ user.username }}</h2>
     <h3>Own products for sale: {{ items | count }}</h3>
     <ul>
       {% for item in items %}
@@ -13,33 +18,38 @@
       {% endfor %}
     </ul>
 
-    <h3>Your Shopping Basket</h3>
+    <h3>Shopping Basket</h3>
     {% if purchases %}
-      <ul>
-        {% for purchase in purchases %}
-          <li>
-            <strong>{{ purchase.item_title }}</strong> ({{ purchase.quantity }} pcs) -
-            {{ purchase.price_at_purchase }} € each -
-            Total: {{ purchase.total_price }} €
-          </li>
-        {% endfor %}
-      </ul>
-      <h3>Total for all items: {{ purchases | sum(attribute='total_price') }} €</h3>
+      <form action="/update_basket" method="POST">
+        <ul>
+          {% for purchase in purchases %}
+            <li>
+              <strong>{{ purchase.item_title }}</strong>
+              <input type="number" name="quantity_{{ purchase.purchase_id }}" value="{{ purchase.quantity }}" min="1" style="width: 50px;">
+              pcs - {{ purchase.price_at_purchase }} € each -
+              Total: {{ purchase.total_price }} €
+              <button type="submit" formaction="/remove_from_basket/{{ purchase.purchase_id }}"
+                      onclick="return confirm('Remove this item?')">Remove</button>
+            </li>
+          {% endfor %}
+        </ul>
+        <h3>Total price: {{ purchases | sum(attribute='total_price') }} €</h3>
+        <button type="submit">Update quantities</button>
+        <button type="submit" formaction="/checkout">Proceed to checkout</button>
+      </form>
     {% else %}
       <p>Your shopping basket is empty.</p>
     {% endif %}
 
-    <p><a href="/">Back</a></p>
-
+    <p><a href="/">Back</a>
     {% if session.get('id') == user.id %}
-    <p><a href="/messages">Go to your messages</a></p>
+      <a href="/messages">Messages</a></p>
     {% else %}
-    <h3>Send a message to {{ user.username }}</h3>
-    <form method="post" action="/send_message/{{ user.id }}">
-        <textarea name="content"></textarea><br>
-        <button type="submit">Send</button>
-    </form>
-{% endif %}
-
+      <h3>Send a message to {{ user.username }}</h3>
+      <form method="post" action="/send_message/{{ user.id }}">
+          <textarea name="content"></textarea><br>
+          <button type="submit">Send</button>
+      </form>
+    {% endif %}
   </body>
 </html>

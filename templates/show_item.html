@@ -4,6 +4,10 @@
     <title>{{ item.title }}</title>
   </head>
   <body>
+    <p>
+      You are logged in by username {{ session.username }}. Your personal ID-number is {{
+      session.get('id') }}.
+    </p>
     <h1>{{ item.title }}</h1>
     {% if session.get("id") == item.user_id %}
 
@@ -28,8 +32,6 @@
     </ul>
     </p>
     {% endif %}
-    <h2>Shopping basket</h2>
-    <h2>Make a bid?</h2>
     <form action="/create_purchase" method="post">
       Pcs:
       <select name="quantity" required>

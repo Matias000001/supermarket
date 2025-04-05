@@ -3,22 +3,23 @@
   <head>
     <title>shop</title>
   </head>
-
   <body>
+    {% if session.username %}
+    <p>
+      You are logged in by username {{ session.username }}. Your personal ID-number is {{
+      session.get('id') }}.
+    </p>
+    {% endif %}
     <h2>SUPERMARKET</h2>
 
     {% if session.username %}
-    <p>
-      You are logged in by username {{ session.username }}. Your personal id-number is {{
-      session.get('id') }}
-    </p>
     <p>
       <a href="/user/{{ session.get('id') }}">Homepage</a>
       <a href="/new_item">New item</a>
       <a href="/find_item">Find item</a>
     </p>
 
-    <h2>Products for sale in the Supermarket</h2>
+    <h2>Products for sale</h2>
 
     <ul>
       {% for item in items %}

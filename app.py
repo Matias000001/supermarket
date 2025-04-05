@@ -292,3 +292,41 @@ def delete_conversation(partner_id):
     sql = "DELETE FROM messages WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)"
     db.execute(sql, [user_id, partner_id, partner_id, user_id])
     return redirect("/messages")
+
+
+
+@app.route('/update_basket', methods=['POST'])
+def update_basket():
+    if 'id' not in session:
+        return redirect('/login')
+    try:
+        for key, value in request.form.items():
+            if key.startswith('quantity_'):
+                purchase_id = key.split('_')[1]
+                db.execute(
+                    "UPDATE purchases SET quantity = ? WHERE id = ? AND user_id = ?",
+                    [value, purchase_id, session['id']]
+                )
+        return redirect(f'/user/{session["id"]}')
+    except Exception as e:
+        print("Virhe ostoskorin päivityksessä:", e)
+        return redirect(f'/user/{session["id"]}')
+
+@app.route('/remove_from_basket/<int:purchase_id>', methods=['POST'])
+def remove_from_basket(purchase_id):
+    if 'id' not in session:
+        return redirect('/login')
+    try:
+        print(f"Yritetään poistaa ostos {purchase_id}, käyttäjä {session['id']}")
+        db.execute("DELETE FROM purchases WHERE id = ? AND user_id = ?", [purchase_id, session['id']])
+        return redirect(f'/user/{session["id"]}')
+    except Exception as e:
+        print("Virhe tuotteen poistossa:", e)
+        return redirect(f'/user/{session["id"]}')
+
+@app.route('/checkout', methods=['POST'])
+def checkout():
+    if 'id' not in session:
+        return redirect('/login')
+
+    return redirect('/checkout_page')
