@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping Basket</title>
+</head>
+<body>
+    {% if session.username %}
+    <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
+    {% endif %}
+    <p>
+    <h2>SUPERMARKET</h2>
+    <p>
+        <a href="/">Mainpage</a>
+        <a href="/user/{{ session.get('id') }}">Homepage</a>
+        <a href="/new_item">New item</a>
+        <a href="/find_item">Find item</a>
+        <a href="/basket">Shopping Basket</a>
+        <a href="/messages">Messages</a>
+        <a href="/logout">Log out</a>
+    </p>
+    <h2>Shopping Basket</h2>
+    {% if purchases %}
+      <form action="/update_basket" method="POST">
+        <ul>
+            {% for purchase in purchases %}
+            <li>
+              <strong>{{ purchase["title"] }}</strong>
+              <input type="number" name="quantity_{{ purchase["purchase_id"] }}" value="{{ purchase["quantity"] }}" min="1" style="width: 50px;">
+              pcs - {{ purchase["price_at_purchase"] }} € each -
+              Total: {{ purchase["total_price"] }} €
+              <button type="submit" formaction="/remove_from_basket/{{ purchase["purchase_id"] }}"
+                      onclick="return confirm('Remove this item?')">Remove</button>
+            </li>
+          {% endfor %}
+        </ul>
+        <h3>Total price: {{ purchases | sum(attribute='total_price') }} €</h3>
+        <button type="submit">Update quantities</button>
+        <button type="submit" formaction="/checkout">Proceed to checkout</button>
+      </form>
+    {% else %}
+      <p>Your shopping basket is empty.</p>
+    {% endif %}
+</body>
+</html>

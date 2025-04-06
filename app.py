@@ -7,6 +7,8 @@ import config
 import items
 import re
 import users
+import messages
+import basket
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -14,7 +16,6 @@ app.secret_key = config.SECRET_KEY
 with open("keyfile.key", "rb") as key_file:
     key = key_file.read()
 fernet = Fernet(key)
-
 
 def require_login():
     if "username" not in session:
@@ -85,6 +86,9 @@ def update_item():
     description = request.form["description"]
     if not description or len(description) > 1000:
         abort(403)
+    quantity = request.form["quantity"]
+    if not quantity or int(quantity) < 1:
+        abort(403)
     all_classes = items.get_all_classes()
     classes = []
     for entry in request.form.getlist("classes"):
@@ -95,8 +99,10 @@ def update_item():
             if parts[1] not in all_classes[parts[0]]:
                 abort(403)
             classes.append((parts[0], parts[1]))
-    items.update_item(item_id, title, description, classes)
+    items.update_item(item_id, title, description, classes, quantity)
+    flash("Item updated successfully.", "success")
     return redirect(f"/item/{item_id}")
+
 
 @app.route("/edit_item/<int:item_id>")
 def edit_item(item_id):
@@ -130,7 +136,6 @@ def create_item():
     description = request.form["description"]
     price = request.form["price"]
     quantity = request.form.get("quantity", "1")
-
     if not title or len(title) > 50:
         abort(403)
     if not description or len(description) > 1000:
@@ -139,11 +144,9 @@ def create_item():
         abort(403)
     if not quantity.isdigit() or int(quantity) < 1:
         abort(403)
-
     user_id = session["id"]
     all_classes = items.get_all_classes()
     classes = []
-
     for entry in request.form.getlist("classes"):
         if entry:
             parts = entry.split(":")
@@ -154,25 +157,6 @@ def create_item():
             classes.append((parts[0], parts[1]))
     items.add_item(title, description, price, quantity, user_id, classes)
     return redirect("/")
-
-@app.route("/create_purchase", methods=["POST"])
-def create_purchase():
-    require_login()
-    item_id = request.form["item_id"]
-    if not re.match("^[0-9]+$", item_id):
-        abort(403)
-    item = items.get_item(item_id)
-    if not item:
-        abort(403)
-    price = request.form["price"]
-    quantity = request.form["quantity"]
-    seller_id = request.form["seller_id"]
-    if not re.match("^[1-5]$", quantity):
-        abort(403)
-    user_id = session["id"]
-    items.add_purchase(item_id, user_id, seller_id, price, quantity)
-    flash(f"Tuote lisätty ostoskoriin ({quantity} kpl)", category="success")
-    return redirect("/item/" + str(item_id))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -213,114 +197,84 @@ def create():
         return "Error: Name is already taken"
     return render_template("index.html")
 
-
-# TODO: siirrä sql-kyselyt erilliseen tiedostoon
 @app.route("/messages")
-def messages():
-    user_id = session.get('id')
-    if not user_id:
+def show_messages():
+    if 'id' not in session:
         return redirect("/login")
-
-    sql = """WITH conversation_partners AS (
-                 SELECT
-                     CASE
-                         WHEN sender_id = ? THEN recipient_id
-                         ELSE sender_id
-                     END AS partner_id,
-                     MAX(sent_at) AS last_message_time
-                 FROM messages
-                 WHERE sender_id = ? OR recipient_id = ?
-                 GROUP BY partner_id
-             )
-             SELECT
-                 u.id AS partner_id,
-                 u.username AS partner_name,
-                 m.id AS message_id,
-                 m.content,
-                 datetime(m.sent_at) AS sent_at,
-                 m.sender_id
-             FROM conversation_partners cp
-             JOIN users u ON cp.partner_id = u.id
-             JOIN messages m ON (
-                 (m.sender_id = ? AND m.recipient_id = cp.partner_id) OR
-                 (m.sender_id = cp.partner_id AND m.recipient_id = ?)
-             )
-             ORDER BY cp.last_message_time DESC, m.sent_at ASC"""
-    messages = db.query(sql, [user_id, user_id, user_id, user_id, user_id])
-
-    conversations = {}
-    for msg in messages:
-        partner_id = msg['partner_id']
-        if partner_id not in conversations:
-            conversations[partner_id] = {
-                'partner_id': partner_id,
-                'partner_name': msg['partner_name'],
-                'messages': []
-            }
-
-        decrypted_content = fernet.decrypt(msg['content'].encode()).decode()
-        conversations[partner_id]['messages'].append({
-            'id': msg['message_id'],
-            'content': decrypted_content,
-            'sent_at': msg['sent_at'],
-            'sender_id': msg['sender_id']
-        })
-
-    conversation_list = list(conversations.values())
-    return render_template("messages.html", conversations=conversation_list)
+    user_id = session['id']
+    conversations = messages.get_user_conversations(user_id)
+    return render_template("messages.html", conversations=conversations)
 
 @app.route("/send_message/<int:recipient_id>", methods=["POST"])
 def send_message(recipient_id):
     if 'id' not in session:
         return redirect("/login")
     content = request.form['content']
-    sender_id = session['id']
-    encrypted_content = fernet.encrypt(content.encode()).decode()
-    sql = "INSERT INTO messages (content, sender_id, recipient_id) VALUES (?, ?, ?)"
-    db.execute(sql, [encrypted_content, sender_id, recipient_id])
+    try:
+        messages.send_message(recipient_id, content)
+        flash("Message sent successfully", "success")
+    except Exception as e:
+        flash(f"Failed to send message: {str(e)}", "danger")
     return redirect("/messages")
 
 @app.route("/delete_conversation/<int:partner_id>", methods=["POST"])
 def delete_conversation(partner_id):
     if 'id' not in session:
         return redirect("/login")
-    user_id = session['id']
-    sql = "DELETE FROM messages WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)"
-    db.execute(sql, [user_id, partner_id, partner_id, user_id])
+    try:
+        messages.delete_conversation(partner_id)
+        flash("Conversation successfully deleted", "success")
+    except Exception as e:
+        flash(f"Error while deleting: {str(e)}", "danger")
     return redirect("/messages")
 
-@app.route('/update_basket', methods=['POST'])
+@app.route("/create_purchase", methods=["POST"])
+def create_purchase():
+    require_login()
+    item_id = request.form["item_id"]
+    if not re.match("^[0-9]+$", item_id):
+        abort(403)
+    item = items.get_item(item_id)
+    if not item:
+        abort(403)
+    price = request.form["price"]
+    quantity = request.form["quantity"]
+    seller_id = request.form["seller_id"]
+    if not re.match("^[1-5]$", quantity):
+        abort(403)
+    user_id = session["id"]
+    items.add_purchase(item_id, user_id, seller_id, price, quantity)
+    flash(f"Product added to cart({quantity} kpl)", category="success")
+    return redirect("/item/" + str(item_id))
+
+@app.route("/update_basket", methods=["POST"])
 def update_basket():
     if 'id' not in session:
         return redirect('/login')
-    try:
-        for key, value in request.form.items():
-            if key.startswith('quantity_'):
-                purchase_id = key.split('_')[1]
-                db.execute(
-                    "UPDATE purchases SET quantity = ? WHERE id = ? AND user_id = ?",
-                    [value, purchase_id, session['id']]
-                )
-        return redirect(f'/user/{session["id"]}')
-    except Exception as e:
-        print("Virhe ostoskorin päivityksessä:", e)
-        return redirect(f'/user/{session["id"]}')
+    purchases = basket.get_cart(session['id'])
+    for purchase in purchases:
+        quantity = request.form.get(f"quantity_{purchase['purchase_id']}")
+    if quantity:
+        basket.update_quantity(purchase['purchase_id'], session['id'], int(quantity))
+    return redirect("/basket")
 
-@app.route('/remove_from_basket/<int:purchase_id>', methods=['POST'])
+@app.route("/remove_from_basket/<int:purchase_id>", methods=["POST"])
 def remove_from_basket(purchase_id):
     if 'id' not in session:
         return redirect('/login')
-    try:
-        print(f"Yritetään poistaa ostos {purchase_id}, käyttäjä {session['id']}")
-        db.execute("DELETE FROM purchases WHERE id = ? AND user_id = ?", [purchase_id, session['id']])
-        return redirect(f'/user/{session["id"]}')
-    except Exception as e:
-        print("Virhe tuotteen poistossa:", e)
-        return redirect(f'/user/{session["id"]}')
+    basket.remove_item(purchase_id, session['id'])
+    return redirect("/basket")
 
-@app.route('/checkout', methods=['POST'])
+@app.route("/checkout", methods=["POST"])
 def checkout():
     if 'id' not in session:
         return redirect('/login')
+    basket.checkout(session['id'])
+    return redirect("/")
 
-    return redirect('/checkout_page')
+@app.route("/basket")
+def show_basket():
+    if 'id' not in session:
+        return redirect('/login')
+    purchases = basket.get_cart(session['id'])
+    return render_template("basket.html", purchases=purchases)

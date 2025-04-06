@@ -45,22 +45,17 @@ def get_classes(item_id):
 def get_item(item_id):
     sql = """SELECT i.id, i.title, i.description, i.price, i.quantity,
                     u.id AS user_id, u.username
-                    ROM items i
-                    JOIN users u ON i.user_id = u.id
-                    WHERE i.id = ?"""
+             FROM items i
+             JOIN users u ON i.user_id = u.id
+             WHERE i.id = ?"""
     result = db.query(sql, [item_id])
-    if result:
-        item = dict(result[0])
-        return item
-    return None
+    return result[0] if result else None
 
-def update_item(item_id, title, description, classes):
-    sql = "UPDATE items SET title = ?, description = ? WHERE id = ?"
-    db.execute(sql, [title, description, item_id])
-
+def update_item(item_id, title, description, classes, quantity):
+    sql = "UPDATE items SET title = ?, description = ?, quantity = ? WHERE id = ?"
+    db.execute(sql, [title, description, quantity, item_id])
     sql = "DELETE FROM item_classes WHERE item_id = ?"
     db.execute(sql, [item_id])
-
     sql = "INSERT INTO item_classes (item_id, title, value) VALUES (?, ?, ?)"
     for title, value in classes:
         db.execute(sql, [item_id, title, value])

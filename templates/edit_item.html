@@ -3,15 +3,19 @@
   <head>
     <title>edit_item</title>
   </head>
-
   <body>
     {% if session.username %}
-    <p>
-      You are logged in by username {{ session.username }}. Your personal ID-number is {{
-      session.get('id') }}.
-    </p>
+    <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
     {% endif %}
     <h2>SUPERMARKET</h2>
+    <p>
+      <a href="/">Mainpage</a>
+      <a href="/user/{{ session.get('id') }}">Homepage</a>
+      <a href="/new_item">New item</a>
+      <a href="/basket">Shopping Basket</a>
+      <a href="/find_item">Find item</a>
+      <a href="/logout">Log out</a>
+    </p>
     <h2>Edit item</h2>
     <form action="/update_item" method="post">
       <p>
@@ -20,9 +24,13 @@
       </p>
       <p>
         Description:<br />
-        <textarea rows="8" cols="60" name="description" maxlength="1000" required>{{item.description }}</textarea>
+        <textarea rows="8" cols="60" name="description" maxlength="1000" required>{{ item.description }}</textarea>
       </p>
       <input type="hidden" name="item_id" value="{{ item.id }}"/>
+      <p>
+        Quantity: <br />
+        <input type="number" name="quantity" value="{{ item.quantity }}" min="1" required/>
+      </p>
       {% for class in all_classes %}
       <p>
         {{ class }}: <br />
@@ -38,7 +46,6 @@
       {% endfor %}
       <input type="submit" value="Update" />
       <p>
-      <a href="/">Mainpage</a>
       <a href="/item/{{ item.id }}">Back</a>
       </p>
     </form>
