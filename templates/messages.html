@@ -1,23 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Messages</title>
   <style>
-    .message.sent { color: blue; }
-    .message.received { color: green; }
+     .flash-message {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+      opacity: 1;
+      transition: opacity 2s ease-out;
+    }
+    .success-message {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .danger-message {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .flash-message.hide {
+      opacity: 0;
+    }
   </style>
 </head>
 <body>
-  {% with messages = get_flashed_messages(category_filter=["success"]) %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div class="success-message">
-        {% for message in messages %}
-          {{ message }}
-        {% endfor %}
-      </div>
+      {% for category, message in messages %}
+        <div class="flash-message {{ category }}-message">
+        {{ message }}
+        </div>
+      {% endfor %}
     {% endif %}
   {% endwith %}
-  <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
+  <p>You are logged in as {{ session.username }}.</p>
   <h2>SUPERMARKET</h2>
   <p>
     <a href="/">Mainpage</a>
@@ -26,7 +45,7 @@
     <a href="/find_item">Find item</a>
     <a href="/basket">Shopping Basket</a>
     <a href="/messages">Messages</a>
-    <a href="/logout">Log out</a>
+    <a href="/logout">Logout</a>
   </p>
   <h2>Messages</h2>
   {% if not conversations %}
@@ -35,17 +54,17 @@
     {% for conversation in conversations %}
       <div class="conversation">
         <h3>Messages with user {{ conversation.partner_name }}:</h3>
-        <div class="messages">
-          {% for msg in conversation.messages %}
-          <div class="message {% if msg.sender_id == session.id %}sent{% else %}received{% endif %}">
-            <div class="message-header">
+          <div class="messages">
+            {% for msg in conversation.messages %}
+              <div class="message {% if msg.sender_id == session.id %}sent{% else %}received{% endif %}">
+                <div class="message-header">
               {% if msg.sender_id == session.id %}You{% else %}{{ conversation.partner_name }}{% endif %}
               ({{ msg.sent_at }}):
-            </div>
+                </div>
             <div class="message-content">{{ msg.content }}</div>
           </div>
           {% endfor %}
-        </div>
+      </div>
         <p></p>
         <form action="/send_message/{{ conversation.partner_id }}" method="POST">
           <textarea name="content" placeholder="Write a message to {{ conversation.partner_name }}" required></textarea><br>

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>new_item</title>
   </head>
   <body>
-    <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
+    <p>You are logged in as {{ session.username }}.</p>
     <h2>SUPERMARKET</h2>
     <p>
       <a href="/">Mainpage</a>
@@ -16,7 +18,7 @@
       <a href="/logout">Log out</a>
     </p>
     <h2>New item</h2>
-    <form action="/create_item" method="post">
+    <form action="/create_item" method="post" enctype="multipart/form-data">
       <p>
         Title: <br />
         <input type="text" name="title" maxlength="50" required />
@@ -32,6 +34,10 @@
       <p>
         Quantity: <br />
         <input type="number" name="quantity" min="1" required />
+      </p>
+      <p>
+        Image: <br />
+        <input type="file" name="image" accept="image/*" />
       </p>
       {% for class in classes %}
       <p>

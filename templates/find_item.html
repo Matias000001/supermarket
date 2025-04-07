@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>find item</title>
   </head>
   <body>
     {% if session.username %}
-    <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
+    <p>You are logged in as {{ session.username }}.</p>
     {% endif %}
     <h2>SUPERMARKET</h2>
     <p>
@@ -15,7 +17,7 @@
       <a href="/find_item">Find item</a>
       <a href="/basket">Shopping Basket</a>
       <a href="/messages">Messages</a>
-      <a href="/logout">Log out</a>
+      <a href="/logout">Log ut</a>
     </p>
     <h2>Find item</h2>
     <form action="/find_item" method="get">

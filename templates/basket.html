@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Basket</title>
 </head>
 <body>
     {% if session.username %}
-    <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
+    <p>You are logged in as {{ session.username }}.</p>
     {% endif %}
     <p>
     <h2>SUPERMARKET</h2>

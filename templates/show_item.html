@@ -1,50 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ item.title }}</title>
   </head>
   <body>
     {% with messages = get_flashed_messages(category_filter=["success"]) %}
-    {% if messages %}
-      <div class="success-message">
-        {% for message in messages %}
-          {{ message }}
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-    <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
+      {% if messages %}
+        <div class="success-message">
+          {% for message in messages %}
+            {{ message }}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+  
+    <p>You are logged in as {{ session.username }}.</p>
+
     <h2>SUPERMARKET</h2>
     <p>
       <a href="/">Mainpage</a>
       <a href="/user/{{ session.get('id') }}">Homepage</a>
       <a href="/new_item">New item</a>
-      <a href="/basket">Shopping Basket</a>
       <a href="/find_item">Find item</a>
+      <a href="/basket">Shopping Basket</a>
+      <a href="/messages">Messages</a>
       <a href="/logout">Log out</a>
     </p>
     <h3>{{ item.title }}</h3>
-    <p>{{ item.description | e}}</p>
-    <p>Price: {{ item.price | e}} €</p>
+
+    {% if item['image_filename'] %}
+    <br>
+    <a href="{{ url_for('static', filename='uploads/' + item['image_filename']) }}" target="_blank">
+      <img src="{{ url_for('static', filename='uploads/' + item['image_filename']) }}" alt="{{ item.title }}" width="100">
+    </a>
+    {% endif %}
+
+    <p>{{ item.description | e }}</p>
+    <p>Price: {{ item.price | e }} €</p>
     <p>Available: {{ item.quantity }} pcs</p>
     <p>Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></p>
+
     {% if classes %}
     <p>
       Classes:
       <ul>
         {% for class in classes %}
-        <li>{{ class.title }}: {{ class.value }}</li>
+          <li>{{ class.title }}: {{ class.value }}</li>
         {% endfor %}
       </ul>
     </p>
     {% endif %}
+
     {% if session.get("id") != item.user_id %}
       {% if item.quantity > 0 %}
       <form action="/create_purchase" method="post">
         Pcs:
         <select name="quantity" required>
           <option value="" disabled selected>Select quantity</option>
-          {% for i in range(1, [item.quantity, 5]|min + 1) %}
+            {% for i in range(1, [item.quantity, 5]|min + 1) %}
           <option value="{{ i }}">{{ i }}</option>
           {% endfor %}
         </select>
@@ -54,9 +69,10 @@
         <input type="submit" value="Add to basket" />
       </form>
       {% else %}
-      <p>This product is currently out of stock.</p>
+        <p>This product is currently out of stock.</p>
       {% endif %}
     {% endif %}
+
     {% if session.get("id") == item.user_id %}
     <p>
       <a href="/edit_item/{{ item.id }}">Edit</a>

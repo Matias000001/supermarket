@@ -1,14 +1,8 @@
-import sqlite3
-from flask import Flask, flash
-from flask import abort, redirect, render_template, request, session
+from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 from cryptography.fernet import Fernet
-import db
-import config
-import items
-import re
-import users
-import messages
-import basket
+from werkzeug.utils import secure_filename
+import os, re, sqlite3
+import config, items, users, messages, basket
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -16,6 +10,13 @@ app.secret_key = config.SECRET_KEY
 with open("keyfile.key", "rb") as key_file:
     key = key_file.read()
 fernet = Fernet(key)
+
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 def require_login():
     if "username" not in session:
@@ -31,12 +32,10 @@ def show_user(user_id):
     user = users.get_user(user_id)
     if not user:
         abort(404)
-    user_items = users.get_items(user_id)
+    user_items = items.get_user_items(user_id)
     if not user_items:
         user_items = []
-    purchases = items.get_purchases(user_id)
-    print(items.get_purchases(10))
-    return render_template("show_user.html", user=user, items=user_items, purchases=purchases)
+    return render_template("show_user.html", user=user, items=user_items)
 
 @app.route("/find_item")
 def find_item():
@@ -75,7 +74,7 @@ def remove_item(item_id):
 def update_item():
     require_login()
     item_id = request.form["item_id"]
-    item = items.get_item(item_id)
+    item = dict(items.get_item(item_id))
     if not item:
         abort(404)
     if item["user_id"] != session["id"]:
@@ -99,10 +98,28 @@ def update_item():
             if parts[1] not in all_classes[parts[0]]:
                 abort(403)
             classes.append((parts[0], parts[1]))
-    items.update_item(item_id, title, description, classes, quantity)
+    new_image = request.files.get('new_image')
+    image_filename = item["image_filename"]
+    if new_image and allowed_file(new_image.filename):
+        if image_filename:
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+            except FileNotFoundError:
+                pass
+        filename = secure_filename(new_image.filename)
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        new_image.save(image_path)
+        image_filename = filename
+    elif 'remove_image' in request.form:
+        if image_filename:
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+            except FileNotFoundError:
+                pass
+        image_filename = None
+    items.update_item(item_id, title, description, classes, quantity, image_filename)
     flash("Item updated successfully.", "success")
     return redirect(f"/item/{item_id}")
-
 
 @app.route("/edit_item/<int:item_id>")
 def edit_item(item_id):
@@ -129,6 +146,9 @@ def show_item(item_id):
     classes = items.get_classes(item_id)
     return render_template("show_item.html", item=item, classes=classes)
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route("/create_item", methods=["POST"])
 def create_item():
     require_login()
@@ -144,6 +164,12 @@ def create_item():
         abort(403)
     if not quantity.isdigit() or int(quantity) < 1:
         abort(403)
+    image_filename = None
+    if 'image' in request.files:
+        file = request.files['image']
+        if file and allowed_file(file.filename):
+            image_filename = secure_filename(file.filename)
+            file.save(os.path.join(UPLOAD_FOLDER, image_filename))
     user_id = session["id"]
     all_classes = items.get_all_classes()
     classes = []
@@ -155,7 +181,7 @@ def create_item():
             if parts[1] not in all_classes[parts[0]]:
                 abort(403)
             classes.append((parts[0], parts[1]))
-    items.add_item(title, description, price, quantity, user_id, classes)
+    items.add_item(title, description, price, quantity, user_id, classes, image_filename)
     return redirect("/")
 
 @app.route("/login", methods=["GET", "POST"])
@@ -178,6 +204,8 @@ def logout():
     if "username" in session:
         del session["id"]
         del session["username"]
+    if "username" in session:
+        session.clear()
     return redirect("/")
 
 @app.route("/register")
@@ -209,12 +237,14 @@ def show_messages():
 def send_message(recipient_id):
     if 'id' not in session:
         return redirect("/login")
+    
     content = request.form['content']
     try:
         messages.send_message(recipient_id, content)
         flash("Message sent successfully", "success")
     except Exception as e:
         flash(f"Failed to send message: {str(e)}", "danger")
+    
     return redirect("/messages")
 
 @app.route("/delete_conversation/<int:partner_id>", methods=["POST"])

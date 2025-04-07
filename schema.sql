@@ -9,7 +9,8 @@ CREATE TABLE items (
     title TEXT,
     description TEXT,
     price INTEGER,
-    user_id INTEGER REFERENCES users
+    user_id INTEGER REFERENCES users,
+    image_filename TEXT
 );
 
 CREATE TABLE classes (

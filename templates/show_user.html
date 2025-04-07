@@ -1,38 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Userpage {{ user.username }}</title>
   </head>
   <body>
     {% if session.username %}
-    <p>You are logged in by username {{ session.username }}. Your personal ID-number is {{ session.get('id') }}.</p>
+      <p>You are logged in as {{ session.username }}.</p>
     {% endif %}
+    
     <h2>SUPERMARKET</h2>
+    
     {% if session.username %}
-    <p>
-      <a href="/">Mainpage</a>
-      <a href="/user/{{ session.get('id') }}">Homepage</a>
-      <a href="/new_item">New item</a>
-      <a href="/find_item">Find item</a>
-      {% if session.get('id') == user.id %}
-       <a href="/basket">Shopping Basket</a>
-       <a href="/messages">Messages</a>
-       <a href="/logout">Log out</a>
-      </p>
-    <h2>Userpage {{ user.username }}</h2>
-      {% else %}
-      <h3>Send a message to {{ user.username }}</h3>
-      <form method="post" action="/send_message/{{ user.id }}">
-       <textarea name="content"></textarea><br>
-       <button type="submit">Send</button>
-      </form>
+      <nav>
+        <a href="/">Mainpage</a>
+        <a href="/user/{{ session.get('id') }}">Homepage</a>
+        <a href="/new_item">New item</a>
+        <a href="/find_item">Find item</a>
+        <a href="/basket">Shopping Basket</a>
+        <a href="/messages">Messages</a>
+        <a href="/logout">Log out</a>
+      </nav>
     {% endif %}
-    </p>
+    
+    <h3>{{ user.username }}'s Profile</h3>
+    
+    {% if session.username and session.get('id') != user.id %}
+      <section class="message-form">
+        <h3>Send message to {{ user.username }}</h3>
+        <form method="post" action="/send_message/{{ user.id }}">
+          <textarea name="content" required placeholder="Write your message..."></textarea><br>
+          <button type="submit">Send Message</button>
+        </form>
+      </section>
     {% endif %}
-    <h3>Own products for sale: {{ items | count }}</h3>
-    <ul>
+    
+    <h3>Products for sale ({{ items | count }})</h3>
+    <ul class="product-list">
       {% for item in items %}
-        <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
+        <li class="product-item">
+          <a href="/item/{{ item.id }}">{{ item.title }}</a>
+          {% if item.image_filename %}
+            <div class="product-image">
+              <a href="{{ url_for('static', filename='uploads/' + item.image_filename) }}" target="_blank">
+                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" 
+                     alt="{{ item.title }}" 
+                     width="100">
+              </a>
+            </div>
+          {% endif %}
+        </li>
+      {% else %}
+        <li>No products available</li>
       {% endfor %}
     </ul>
   </body>
