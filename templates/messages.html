@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Messages</title>
   <style>
      .flash-message {
@@ -61,7 +62,7 @@
               {% if msg.sender_id == session.id %}You{% else %}{{ conversation.partner_name }}{% endif %}
               ({{ msg.sent_at }}):
                 </div>
-            <div class="message-content">{{ msg.content }}</div>
+            <div class="message-content">{{ msg.content | replace('\n', '<br>') | safe }}</div>
           </div>
           {% endfor %}
       </div>

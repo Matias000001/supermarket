@@ -28,7 +28,7 @@
             {% if item.image_filename %}
               <br>
               <a href="{{ url_for('static', filename='uploads/' + item.image_filename) }}" target="_blank">
-                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="100">
+                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="150">
               </a>
             {% endif %}
           </li>

@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Basket</title>
-</head>
-<body>
+  </head>
+  <body>
     {% if session.username %}
     <p>You are logged in as {{ session.username }}.</p>
     {% endif %}
-    <p>
     <h2>SUPERMARKET</h2>
     <p>
         <a href="/">Mainpage</a>
@@ -22,25 +21,29 @@
     </p>
     <h2>Shopping Basket</h2>
     {% if purchases %}
-      <form action="/update_basket" method="POST">
+    <form action="/update_basket" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <ul>
-            {% for purchase in purchases %}
-            <li>
+          {% for purchase in purchases %}
+          <li>
               <strong>{{ purchase["title"] }}</strong>
-              <input type="number" name="quantity_{{ purchase["purchase_id"] }}" value="{{ purchase["quantity"] }}" min="1" style="width: 50px;">
+              <input type="number" name="quantity_{{ purchase['purchase_id'] }}"
+                     value="{{ purchase['quantity'] }}" min="1"
+                     max="{{ quantities[purchase['item_id']] }}" style="width: 50px;">
               pcs - {{ purchase["price_at_purchase"] }} € each -
               Total: {{ purchase["total_price"] }} €
-              <button type="submit" formaction="/remove_from_basket/{{ purchase["purchase_id"] }}"
-                      onclick="return confirm('Remove this item?')">Remove</button>
-            </li>
+              <button type="submit" formaction="/remove_from_basket/{{ purchase['purchase_id'] }}"
+                      formmethod="POST">Remove</button>
+          </li>
           {% endfor %}
         </ul>
         <h3>Total price: {{ purchases | sum(attribute='total_price') }} €</h3>
         <button type="submit">Update quantities</button>
         <button type="submit" formaction="/checkout">Proceed to checkout</button>
-      </form>
-    {% else %}
+    </form>
+{% else %}
+
       <p>Your shopping basket is empty.</p>
     {% endif %}
-</body>
+  </body>
 </html>

@@ -10,6 +10,7 @@ CREATE TABLE items (
     description TEXT,
     price INTEGER,
     user_id INTEGER REFERENCES users,
+    quantity INTEGER,
     image_filename TEXT
 );
 

@@ -19,3 +19,7 @@ def get_cart(user_id):
 def checkout(user_id):
     sql = "UPDATE purchases SET status = 'paid' WHERE user_id = ? AND status = 'pending'"
     db.execute(sql, [user_id])
+
+def get_quantitys(product_ids):
+    sql = """SELECT id, quantity FROM items WHERE id IN ({})""".format(','.join(['?'] * len(product_ids)))
+    return db.query(sql, product_ids)

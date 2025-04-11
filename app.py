@@ -1,8 +1,13 @@
+import os, re, sqlite3
+import config, items, users, messages, basket
+import logging
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 from cryptography.fernet import Fernet
 from werkzeug.utils import secure_filename
-import os, re, sqlite3
-import config, items, users, messages, basket
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -11,9 +16,26 @@ with open("keyfile.key", "rb") as key_file:
     key = key_file.read()
 fernet = Fernet(key)
 
+logging.basicConfig(level=logging.INFO)
+
+csrf = CSRFProtect(app)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["50 per minute"]
+)
+
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,     # Eväste ei ole luettavissa JS:llä
+    SESSION_COOKIE_SECURE=True,       # HTTPS
+    SESSION_COOKIE_SAMESITE='Strict', # CSRF suoja
+    PERMANENT_SESSION_LIFETIME=3600   # Sessionin voimassaoloaika sekunteina
+)
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -237,14 +259,12 @@ def show_messages():
 def send_message(recipient_id):
     if 'id' not in session:
         return redirect("/login")
-    
     content = request.form['content']
     try:
         messages.send_message(recipient_id, content)
         flash("Message sent successfully", "success")
     except Exception as e:
         flash(f"Failed to send message: {str(e)}", "danger")
-    
     return redirect("/messages")
 
 @app.route("/delete_conversation/<int:partner_id>", methods=["POST"])
@@ -282,10 +302,17 @@ def update_basket():
     if 'id' not in session:
         return redirect('/login')
     purchases = basket.get_cart(session['id'])
+    product_ids = [purchase['item_id'] for purchase in purchases]
+    quantities = basket.get_quantitys(product_ids)
+    quantities_dict = {item['id']: item['quantity'] for item in quantities}
     for purchase in purchases:
         quantity = request.form.get(f"quantity_{purchase['purchase_id']}")
-    if quantity:
-        basket.update_quantity(purchase['purchase_id'], session['id'], int(quantity))
+        if quantity:
+            quantity = int(quantity)
+            max_quantity = quantities_dict.get(purchase['item_id'])
+            if quantity > max_quantity:
+                quantity = max_quantity
+            basket.update_quantity(purchase['purchase_id'], session['id'], quantity)
     return redirect("/basket")
 
 @app.route("/remove_from_basket/<int:purchase_id>", methods=["POST"])
@@ -307,4 +334,7 @@ def show_basket():
     if 'id' not in session:
         return redirect('/login')
     purchases = basket.get_cart(session['id'])
-    return render_template("basket.html", purchases=purchases)
+    product_ids = [purchase['item_id'] for purchase in purchases]
+    quantities = basket.get_quantitys(product_ids)
+    quantities_dict = {item['id']: item['quantity'] for item in quantities}
+    return render_template("basket.html", purchases=purchases, quantities=quantities_dict)

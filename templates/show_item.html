@@ -56,6 +56,7 @@
     {% if session.get("id") != item.user_id %}
       {% if item.quantity > 0 %}
       <form action="/create_purchase" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         Pcs:
         <select name="quantity" required>
           <option value="" disabled selected>Select quantity</option>
