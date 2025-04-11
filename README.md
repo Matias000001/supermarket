@@ -28,3 +28,28 @@ Ominaisuudet:
 * Käyttäjä näkee sovellukseen lisätyt ilmoitukset.
 * Käyttäjä pystyy etsimään ilmoituksia hakusanalla tai muulla perusteella.
 * Estetty pääsy muokkaamaan tai poistamaan toisen käyttäjän ilmoituksia, eli lisätty oikeuksien tarkitukset.
+
+Feature list 11.4
+* Käyttäjä pystyy luomaan tunnuksen ja kirjautumaan sisään sovellukseen.
+* Vain kirjautunut käyttäjä pystyy katselemaan ilmoituksia ja pääsemään kauppaan sisälle.
+* Käyttäjä pystyy lisäämään, muokkaamaan ja poistamaan omia ilmoituksia.
+* Käyttäjä pystyy myös lisäämään ilmotukselle kuvan, kappalemäärän, tavaraluokan ja kuntoluokan.
+* Käyttäjä näkee sovellukseen lisätyt ilmoitukset.
+* Käyttäjä pystyy etsimään ilmoituksia hakusanalla.
+* Käyttäjä pystyy tekemään ostoksia ja ostokset menevät ostoskoriin.
+* Käyttäjä pystyy muokkaamaan ostoskoria (poistamaan tai päivittämään ostettavien tuotteiden kpl määriä).
+* Ostoskorissa ei pysty lisäämään tuotteita enempää kuin mitä myyjä on asettanut varastosaldoksi.
+* Käyttäjä pystyy lähettämään muille käyttäjälle viestejä ja viestit tulevat näkymään Messages -sivulle.
+* Viestit päivittyvät näkymään viestiketjuissa Messages -sivulle.
+* Käyttäjä pystyy poistamaan viestiketjun.
+* Lisätty Fernet salaus viestien tallentamiseen.
+* Lisätty CSRF-suoja, lokitus ja rate limitteri.
+
+TODO:
+- Useampien kuvien lisäys.
+- näyttää että tuotetta ei saatavilla jos varastosaldo mennyt nollaan.
+- CAPTCHA (hCAPTCHA / Friendly Captcha / PoW).
+- Checkout (selvitä palveluntarjoajien API:t).
+- CSS ja koko design sivulle
+- Profiilin sivu jonne käyttäjä syöttää tietonsa
+- Lisää alasivuja, jossa tietoa Supermarketista

@@ -21,9 +21,9 @@ logging.basicConfig(level=logging.INFO)
 csrf = CSRFProtect(app)
 
 limiter = Limiter(
-    get_remote_address,
     app=app,
-    default_limits=["50 per minute"]
+    key_func=lambda: session.get('user_id') or request.headers.get('X-Unique-ID'),  # Riippuu käyttäjästä, ei IP:stä
+    default_limits=["30 per minute", "500 per day"]
 )
 
 UPLOAD_FOLDER = 'static/uploads'
