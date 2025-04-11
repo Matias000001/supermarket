@@ -1,4 +1,4 @@
-import os, re, sqlite3
+import os, re, sqlite3, random
 import config, items, users, messages, basket
 import logging
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
@@ -40,14 +40,38 @@ app.config.update(
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
+def generate_captcha():
+    a = random.randint(1, 10)
+    b = random.randint(1, 10)
+    session['captcha_answer'] = str(a + b)
+    return f"{a} + {b}"
+
+@app.route("/verify_captcha", methods=["POST"])
+def verify_captcha():
+    user_answer = request.form.get('captcha_answer', '').strip()
+    if user_answer == session.get('captcha_answer'):
+        session['captcha_passed'] = True
+        return redirect(url_for('index'))
+    return "Wrong answer! <a href='/'>Try again</a>", 403
+
+@app.before_request
+def require_captcha():
+    if request.path in ['/login', '/register'] and not session.get('captcha_passed'):
+        abort(403, "Solve CAPTCHA first.")
+
 def require_login():
     if "username" not in session:
         abort(403)
 
 @app.route("/")
 def index():
-    all_items = items.get_items()
-    return render_template("index.html", items = all_items)
+    if 'username' in session:
+        all_items = items.get_items()
+        return render_template("index.html", items=all_items)
+    elif session.get('captcha_passed'):
+        return render_template("index.html")
+    captcha_question = generate_captcha()
+    return render_template("index.html", captcha_question=captcha_question)
 
 @app.route("/user/<int:user_id>")
 def show_user(user_id):

@@ -44,11 +44,11 @@ Feature list 11.4
 * Käyttäjä pystyy poistamaan viestiketjun.
 * Lisätty Fernet salaus viestien tallentamiseen.
 * Lisätty CSRF-suoja, lokitus ja rate limitteri.
+* Lisätty yksinkertainen CAPTCHA 
 
 TODO:
 - Useampien kuvien lisäys.
 - näyttää että tuotetta ei saatavilla jos varastosaldo mennyt nollaan.
-- CAPTCHA (hCAPTCHA / Friendly Captcha / PoW).
 - Checkout (selvitä palveluntarjoajien API:t).
 - CSS ja koko design sivulle
 - Profiilin sivu jonne käyttäjä syöttää tietonsa

@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>shop</title>
+    <style>
+      .captcha-box {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin: 20px 0;
+        max-width: 300px;
+      }
+    </style>
   </head>
   <body>
     {% if session.username %}
@@ -34,10 +42,22 @@
           </li>
         {% endfor %}
       </ul>
+    {% elif not session.captcha_passed %}
+      <h2>SUPERMARKET</h2>
+      <div class="captcha-box">
+        <h3>Are you a robot?</h3>
+        <form action="/verify_captcha" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <p>Solve: <strong>{{ captcha_question }} = ?</strong></p>
+          <input type="text" name="captcha_answer" required>
+          <button type="submit">Continue</button>
+        </form>
+      </div>
+
     {% else %}
       <h2>SUPERMARKET</h2>
       <p>
-        <a href="/login">LOGIN</a> | 
+        <a href="/login">LOGIN</a>
         <a href="/register">REGISTER</a>
       </p>
     {% endif %}
