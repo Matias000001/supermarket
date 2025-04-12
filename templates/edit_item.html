@@ -16,7 +16,7 @@
       <a href="/new_item">New item</a>
       <a href="/basket">Shopping Basket</a>
       <a href="/find_item">Find item</a>
-      <a href="/logout">Log out</a>
+      <a href="/logout">Logout</a>
     </p>
     <h2>Edit item</h2>
     <form action="/update_item" method="post" enctype="multipart/form-data">
@@ -47,7 +47,6 @@
         Change image: <br />
         <input type="file" name="new_image" accept="image/*">
       </p>
-
       {% for class in all_classes %}
       <p>
         {{ class }}: <br />

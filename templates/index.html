@@ -16,6 +16,15 @@
   <body>
     {% if session.username %}
       <p>You are logged in as {{ session.username }}.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul>
+            {% for category, message in messages %}
+              <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
       <h2>SUPERMARKET</h2>
       <p>
         <a href="/">Mainpage</a>
@@ -53,7 +62,6 @@
           <button type="submit">Continue</button>
         </form>
       </div>
-
     {% else %}
       <h2>SUPERMARKET</h2>
       <p>

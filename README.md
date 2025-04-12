@@ -45,11 +45,14 @@ Feature list 11.4
 * Lisätty Fernet salaus viestien tallentamiseen.
 * Lisätty CSRF-suoja, lokitus ja rate limitteri.
 * Lisätty yksinkertainen CAPTCHA 
+* Lisätty profiilikuvan lisäysmahdollisuus
 
 TODO:
+- label kentät
 - Useampien kuvien lisäys.
+- parempi kuvien validointi
 - näyttää että tuotetta ei saatavilla jos varastosaldo mennyt nollaan.
 - Checkout (selvitä palveluntarjoajien API:t).
-- CSS ja koko design sivulle
+- CSS ja koko design sivulle (itse tehtynä)
 - Profiilin sivu jonne käyttäjä syöttää tietonsa
 - Lisää alasivuja, jossa tietoa Supermarketista

@@ -26,33 +26,29 @@
       <a href="/find_item">Find item</a>
       <a href="/basket">Shopping Basket</a>
       <a href="/messages">Messages</a>
-      <a href="/logout">Log out</a>
+      <a href="/logout">Logout</a>
     </p>
     <h3>{{ item.title }}</h3>
-
-    {% if item['image_filename'] %}
+      {% if item['image_filename'] %}
     <br>
     <a href="{{ url_for('static', filename='uploads/' + item['image_filename']) }}" target="_blank">
       <img src="{{ url_for('static', filename='uploads/' + item['image_filename']) }}" alt="{{ item.title }}" width="100">
     </a>
     {% endif %}
-
     <p>{{ item.description | e }}</p>
     <p>Price: {{ item.price | e }} €</p>
     <p>Available: {{ item.quantity }} pcs</p>
     <p>Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></p>
-
     {% if classes %}
-    <p>
-      Classes:
-      <ul>
-        {% for class in classes %}
-          <li>{{ class.title }}: {{ class.value }}</li>
-        {% endfor %}
-      </ul>
-    </p>
+      <p>
+        Classes:
+          <ul>
+            {% for class in classes %}
+              <li>{{ class.title }}: {{ class.value }}</li>
+            {% endfor %}
+         </ul>
+      </p>
     {% endif %}
-
     {% if session.get("id") != item.user_id %}
       {% if item.quantity > 0 %}
       <form action="/create_purchase" method="post">
@@ -73,7 +69,6 @@
         <p>This product is currently out of stock.</p>
       {% endif %}
     {% endif %}
-
     {% if session.get("id") == item.user_id %}
     <p>
       <a href="/edit_item/{{ item.id }}">Edit</a>

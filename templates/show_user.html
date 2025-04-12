@@ -9,9 +9,7 @@
     {% if session.username %}
       <p>You are logged in as {{ session.username }}.</p>
     {% endif %}
-    
     <h2>SUPERMARKET</h2>
-    
     {% if session.username %}
       <nav>
         <a href="/">Mainpage</a>
@@ -20,12 +18,10 @@
         <a href="/find_item">Find item</a>
         <a href="/basket">Shopping Basket</a>
         <a href="/messages">Messages</a>
-        <a href="/logout">Log out</a>
+        <a href="/logout">Logout</a>
       </nav>
     {% endif %}
-    
     <h3>{{ user.username }}'s Profile</h3>
-    
     {% if session.username and session.get('id') != user.id %}
       <section class="message-form">
         <h3>Send message to {{ user.username }}</h3>
@@ -35,7 +31,18 @@
         </form>
       </section>
     {% endif %}
-    
+    {% if image %}
+    <img src="{{ url_for('user_image', user_id=user.id) }}" alt="profile picture" width="200" height="200" />
+        {% else %}
+      <p>No profile picture</p>
+    {% endif %}
+    <form action="/add_image" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p>
+        Profile picture: <input type="file" name="image" accept=".jpg, .jpeg, .png" />
+      </p>
+      <input type="submit" value="Download" />
+    </form>
     <h3>Products for sale ({{ items | count }})</h3>
     <ul class="product-list">
       {% for item in items %}

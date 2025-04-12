@@ -35,38 +35,38 @@ def get_user_conversations(user_id):
     messages_data = db.query(sql, [user_id, user_id, user_id, user_id, user_id])
     conversations = {}
     for msg in messages_data:
-        partner_id = msg['partner_id']
+        partner_id = msg["partner_id"]
         if partner_id not in conversations:
             conversations[partner_id] = {
-                'partner_id': partner_id,
-                'partner_name': msg['partner_name'],
-                'messages': []
+                "partner_id": partner_id,
+                "partner_name": msg["partner_name"],
+                "messages": []
             }
         try:
-            decrypted_content = fernet.decrypt(msg['content'].encode()).decode()
+            decrypted_content = fernet.decrypt(msg["content"].encode()).decode()
         except:
             decrypted_content = "Encrypted message (decryption failed)"   
-        conversations[partner_id]['messages'].append({
-            'id': msg['message_id'],
-            'content': decrypted_content,
-            'sent_at': msg['sent_at'],
-            'sender_id': msg['sender_id']
+        conversations[partner_id]["messages"].append({
+            "id": msg["message_id"],
+            "content": decrypted_content,
+            "sent_at": msg["sent_at"],
+            "sender_id": msg["sender_id"]
         })
     return list(conversations.values())
 
 def send_message(recipient_id, content):
-    if 'id' not in session:
+    if "id" not in session:
         raise PermissionError("User is not logged in")
-    sender_id = session['id']
+    sender_id = session["id"]
     encrypted_content = fernet.encrypt(content.encode()).decode()
     sql = "INSERT INTO messages (content, sender_id, recipient_id) VALUES (?, ?, ?)"
     db.execute(sql, [encrypted_content, sender_id, recipient_id])
     return True
 
 def delete_conversation(partner_id):
-    if 'id' not in session:
+    if "id" not in session:
         raise PermissionError("User is not logged in")
-    user_id = session['id']
+    user_id = session["id"]
     sql = """DELETE FROM messages 
              WHERE (sender_id = ? AND recipient_id = ?) 
              OR (sender_id = ? AND recipient_id = ?)"""
@@ -85,14 +85,14 @@ def get_conversation_between_users(user1_id, user2_id):
     conversation = []
     for msg in messages_data:
         try:
-            decrypted_content = fernet.decrypt(msg['content'].encode()).decode()
+            decrypted_content = fernet.decrypt(msg["content"].encode()).decode()
         except:
             decrypted_content = "Encrypted message (decryption failed)"
         conversation.append({
-            'id': msg['id'],
-            'content': decrypted_content,
-            'sent_at': msg['sent_at'],
-            'sender_id': msg['sender_id'],
-            'sender_name': msg['sender_name']
+            "id": msg["id"],
+            "content": decrypted_content,
+            "sent_at": msg["sent_at"],
+            "sender_id": msg["sender_id"],
+            "sender_name": msg["sender_name"]
         })
     return conversation

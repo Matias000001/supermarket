@@ -1,11 +1,12 @@
-import os, re, sqlite3, random
+import os, re, sqlite3, random, time
 import config, items, users, messages, basket
 import logging
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, make_response, redirect, render_template, request, session, url_for
 from cryptography.fernet import Fernet
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
+from datetime import timedelta
 from flask_limiter.util import get_remote_address
 
 
@@ -22,56 +23,101 @@ csrf = CSRFProtect(app)
 
 limiter = Limiter(
     app=app,
-    key_func=lambda: session.get('user_id') or request.headers.get('X-Unique-ID'),  # Riippuu käyttäjästä, ei IP:stä
-    default_limits=["30 per minute", "500 per day"]
+    key_func=lambda: session.get("user_id") or request.headers.get("X-Unique-ID"),
+    default_limits=["200 per day", "500 per hour"]
 )
 
-UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+UPLOAD_FOLDER = "static/uploads"
+MAX_FILE_SIZE = 1 * 1024 * 1024
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,     # Eväste ei ole luettavissa JS:llä
-    SESSION_COOKIE_SECURE=True,       # HTTPS
-    SESSION_COOKIE_SAMESITE='Strict', # CSRF suoja
-    PERMANENT_SESSION_LIFETIME=3600   # Sessionin voimassaoloaika sekunteina
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SAMESITE="Strict",
+    PERMANENT_SESSION_LIFETIME=10000
 )
 
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
+if not os.path.exists(app.config["UPLOAD_FOLDER"]):
+    os.makedirs(app.config["UPLOAD_FOLDER"])
 
 def generate_captcha():
     a = random.randint(1, 10)
     b = random.randint(1, 10)
-    session['captcha_answer'] = str(a + b)
+    session["captcha_answer"] = str(a + b)
     return f"{a} + {b}"
-
-@app.route("/verify_captcha", methods=["POST"])
-def verify_captcha():
-    user_answer = request.form.get('captcha_answer', '').strip()
-    if user_answer == session.get('captcha_answer'):
-        session['captcha_passed'] = True
-        return redirect(url_for('index'))
-    return "Wrong answer! <a href='/'>Try again</a>", 403
-
-@app.before_request
-def require_captcha():
-    if request.path in ['/login', '/register'] and not session.get('captcha_passed'):
-        abort(403, "Solve CAPTCHA first.")
 
 def require_login():
     if "username" not in session:
         abort(403)
 
+def validate_csrf():
+    if "csrf_token" not in session or "csrf_token" not in request.form:
+        return False
+    return session["csrf_token"] == request.form["csrf_token"]
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/add_image", methods=["GET", "POST"])
+def add_image():
+    require_login()
+    if request.method == "GET":
+        return render_template("add_image.html")
+    if request.method == "POST":
+        file = request.files["image"]
+        if file and allowed_file(file.filename):
+            image = file.read()
+            if len(image) > 100 * 1024:
+                return "Error: Too big size!"
+            user_id = session["id"]
+            users.update_image(user_id, image)
+            return redirect("/user/" + str(user_id))
+    return redirect("/add_image")
+
+@app.route("/user_image/<int:user_id>")
+def user_image(user_id):
+    image = users.get_image(user_id)
+    if not image:
+        abort(404)
+    response = make_response(bytes(image))
+    response.headers.set("Content-Type", "image/jpeg")
+    return response
+
+@app.route("/verify_captcha", methods=["POST"])
+def verify_captcha():
+    if "captcha_answer" not in session:
+        flash("CAPTCHA session expired", "error")
+        return redirect(url_for("index"))
+    user_answer = request.form.get("captcha_answer", "").strip()
+    if user_answer == session["captcha_answer"]:
+        session["captcha_passed"] = True
+        session.pop("captcha_answer", None)
+        flash("Verification successful!", "success")
+    else:
+        flash("Wrong answer, try again", "error")
+    return redirect(url_for("index"))
+
+@app.before_request
+def check_session():
+    print(f"Session data: {dict(session)}")
+
+@app.before_request
+def require_captcha():
+    if request.path in ["/login", "/register"] and not session.get("captcha_passed"):
+        abort(403, "Solve CAPTCHA first.")
+
 @app.route("/")
 def index():
-    if 'username' in session:
+    if "username" in session:
+        session.pop("captcha_passed", None)
         all_items = items.get_items()
         return render_template("index.html", items=all_items)
-    elif session.get('captcha_passed'):
-        return render_template("index.html")
-    captcha_question = generate_captcha()
-    return render_template("index.html", captcha_question=captcha_question)
+    if not session.get("captcha_passed"):
+        captcha_question = generate_captcha()
+        return render_template("index.html", captcha_question=captcha_question)
+    return render_template("index.html")
 
 @app.route("/user/<int:user_id>")
 def show_user(user_id):
@@ -81,7 +127,8 @@ def show_user(user_id):
     user_items = items.get_user_items(user_id)
     if not user_items:
         user_items = []
-    return render_template("show_user.html", user=user, items=user_items)
+    image = users.get_image(user_id)
+    return render_template("show_user.html", user=user, items=user_items, image=image)
 
 @app.route("/find_item")
 def find_item():
@@ -144,22 +191,22 @@ def update_item():
             if parts[1] not in all_classes[parts[0]]:
                 abort(403)
             classes.append((parts[0], parts[1]))
-    new_image = request.files.get('new_image')
+    new_image = request.files.get("new_image")
     image_filename = item["image_filename"]
     if new_image and allowed_file(new_image.filename):
         if image_filename:
             try:
-                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], image_filename))
             except FileNotFoundError:
                 pass
         filename = secure_filename(new_image.filename)
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         new_image.save(image_path)
         image_filename = filename
-    elif 'remove_image' in request.form:
+    elif "remove_image" in request.form:
         if image_filename:
             try:
-                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
+                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], image_filename))
             except FileNotFoundError:
                 pass
         image_filename = None
@@ -192,55 +239,88 @@ def show_item(item_id):
     classes = items.get_classes(item_id)
     return render_template("show_item.html", item=item, classes=classes)
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @app.route("/create_item", methods=["POST"])
 def create_item():
     require_login()
-    title = request.form["title"]
-    description = request.form["description"]
-    price = request.form["price"]
-    quantity = request.form.get("quantity", "1")
-    if not title or len(title) > 50:
-        abort(403)
-    if not description or len(description) > 1000:
-        abort(403)
-    if not re.search("^[1-9][0-9]{0,3}$", price):
-        abort(403)
-    if not quantity.isdigit() or int(quantity) < 1:
-        abort(403)
+    try:
+        title = request.form["title"].strip()
+        description = request.form["description"].strip()
+        price = request.form["price"].strip()
+        quantity = request.form.get("quantity", "1").strip()
+    except KeyError:
+        abort(400, "Required fields are missing")
+    if not (0 < len(title) <= 50):
+        abort(400, "Title must be 1-50 characters long")
+    if not (0 < len(description) <= 1000):
+        abort(400, "Description must be 1-1000 characters.")
+    if not re.fullmatch(r"^[1-9][0-9]{0,3}$", price):
+        abort(400, "Invalid price (1-9999)")
+    if not quantity.isdigit() or not (1 <= int(quantity) <= 999):
+        abort(400, "Invalid quantity (1-999)")
     image_filename = None
-    if 'image' in request.files:
-        file = request.files['image']
-        if file and allowed_file(file.filename):
-            image_filename = secure_filename(file.filename)
-            file.save(os.path.join(UPLOAD_FOLDER, image_filename))
-    user_id = session["id"]
-    all_classes = items.get_all_classes()
+    if "image" in request.files:
+        file = request.files["image"]
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                abort(400, "Allowed formats: .jpg, .jpeg, .png, .webp")
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            file.seek(0)
+            if file_size > 2 * 1024 * 1024:
+                abort(400, "Too big size! (max 2MB)")
+            filename_base = f"item_{int(time.time())}"
+            file_ext = secure_filename(file.filename).split(".")[-1]
+            image_filename = f"{filename_base}.{file_ext}"
+            try:
+                file.save(os.path.join(UPLOAD_FOLDER, image_filename))
+            except Exception as e:
+                app.logger.error(f"Error: With saving : {str(e)}")
+                abort(500, "Error: With saving")
     classes = []
+    all_classes = items.get_all_classes()
     for entry in request.form.getlist("classes"):
         if entry:
-            parts = entry.split(":")
-            if parts[0] not in all_classes:
-                abort(403)
-            if parts[1] not in all_classes[parts[0]]:
-                abort(403)
-            classes.append((parts[0], parts[1]))
-    items.add_item(title, description, price, quantity, user_id, classes, image_filename)
-    return redirect("/")
+            try:
+                class_title, class_value = entry.split(":", 1)
+                if class_title not in all_classes or class_value not in all_classes[class_title]:
+                    abort(400, "Invalid category")
+                classes.append((class_title, class_value))
+            except ValueError:
+                abort(400, "Invalid class format")
+    try:
+        items.add_item(
+            title=title,
+            description=description,
+            price=price,
+            quantity=quantity,
+            user_id=session["id"],
+            classes=classes,
+            image_filename=image_filename
+        )
+        flash("Product added successfully!", "success")
+        return redirect("/")
+    except Exception as e:
+        if image_filename:
+            try:
+                os.remove(os.path.join(UPLOAD_FOLDER, image_filename))
+            except OSError:
+                pass
+        app.logger.error(f"Product addition failed: {str(e)}")
+        abort(500, "Product addition failed")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
         return render_template("login.html")
     if request.method == "POST":
+        session.clear()
         username = request.form["username"]
         password = request.form["password"]
         user_id = users.check_login(username, password)
         if user_id:
             session["username"] = username
             session["id"] = user_id
+            session.permanent = True
             return redirect("/")
         else:
             return "Error: Invalid username or password"
@@ -264,26 +344,32 @@ def create():
     password1 = request.form["password1"]
     password2 = request.form["password2"]
     if password1 != password2:
-        return "Error: Passwords do not match"
+        flash("Passwords do not match", "error")
+        return redirect("register")
     try:
         users.create_user(username, password1)
+        flash("Registration successful! Please login.", "success")
+        return(redirect("login"))
     except sqlite3.IntegrityError:
-        return "Error: Name is already taken"
-    return render_template("index.html")
+        flash("Username already taken", "error")
+        return redirect("register")
+    except sqlite3.OperationalError:
+        flash("Database busy, please try again", "error")
+    return redirect("index")
 
 @app.route("/messages")
 def show_messages():
-    if 'id' not in session:
+    if "id" not in session:
         return redirect("/login")
-    user_id = session['id']
+    user_id = session["id"]
     conversations = messages.get_user_conversations(user_id)
     return render_template("messages.html", conversations=conversations)
 
 @app.route("/send_message/<int:recipient_id>", methods=["POST"])
 def send_message(recipient_id):
-    if 'id' not in session:
+    if "id" not in session:
         return redirect("/login")
-    content = request.form['content']
+    content = request.form["content"]
     try:
         messages.send_message(recipient_id, content)
         flash("Message sent successfully", "success")
@@ -293,7 +379,7 @@ def send_message(recipient_id):
 
 @app.route("/delete_conversation/<int:partner_id>", methods=["POST"])
 def delete_conversation(partner_id):
-    if 'id' not in session:
+    if "id" not in session:
         return redirect("/login")
     try:
         messages.delete_conversation(partner_id)
@@ -323,42 +409,42 @@ def create_purchase():
 
 @app.route("/update_basket", methods=["POST"])
 def update_basket():
-    if 'id' not in session:
-        return redirect('/login')
-    purchases = basket.get_cart(session['id'])
-    product_ids = [purchase['item_id'] for purchase in purchases]
+    if "id" not in session:
+        return redirect("/login")
+    purchases = basket.get_cart(session["id"])
+    product_ids = [purchase["item_id"] for purchase in purchases]
     quantities = basket.get_quantitys(product_ids)
-    quantities_dict = {item['id']: item['quantity'] for item in quantities}
+    quantities_dict = {item["id"]: item["quantity"] for item in quantities}
     for purchase in purchases:
-        quantity = request.form.get(f"quantity_{purchase['purchase_id']}")
+        quantity = request.form.get(f"quantity_{purchase["purchase_id"]}")
         if quantity:
             quantity = int(quantity)
-            max_quantity = quantities_dict.get(purchase['item_id'])
+            max_quantity = quantities_dict.get(purchase["item_id"])
             if quantity > max_quantity:
                 quantity = max_quantity
-            basket.update_quantity(purchase['purchase_id'], session['id'], quantity)
+            basket.update_quantity(purchase["purchase_id"], session["id"], quantity)
     return redirect("/basket")
 
 @app.route("/remove_from_basket/<int:purchase_id>", methods=["POST"])
 def remove_from_basket(purchase_id):
-    if 'id' not in session:
-        return redirect('/login')
-    basket.remove_item(purchase_id, session['id'])
+    if "id" not in session:
+        return redirect("/login")
+    basket.remove_item(purchase_id, session["id"])
     return redirect("/basket")
 
 @app.route("/checkout", methods=["POST"])
 def checkout():
-    if 'id' not in session:
-        return redirect('/login')
-    basket.checkout(session['id'])
+    if "id" not in session:
+        return redirect("/login")
+    basket.checkout(session["id"])
     return redirect("/")
 
 @app.route("/basket")
 def show_basket():
-    if 'id' not in session:
-        return redirect('/login')
-    purchases = basket.get_cart(session['id'])
-    product_ids = [purchase['item_id'] for purchase in purchases]
+    if "id" not in session:
+        return redirect("/login")
+    purchases = basket.get_cart(session["id"])
+    product_ids = [purchase["item_id"] for purchase in purchases]
     quantities = basket.get_quantitys(product_ids)
-    quantities_dict = {item['id']: item['quantity'] for item in quantities}
+    quantities_dict = {item["id"]: item["quantity"] for item in quantities}
     return render_template("basket.html", purchases=purchases, quantities=quantities_dict)
