@@ -144,7 +144,6 @@ def index(page=1):
         if page > page_count:
             return redirect(f"/{page_count}")
         current_items = items.get_items(page, page_size)
-        print(f"TESTAan current_items{dict(current_items[0])}")
         return render_template("index.html", page=page, page_count=page_count, items=current_items)
     if not session.get("captcha_passed"):
         captcha_question = generate_captcha()
@@ -324,14 +323,14 @@ def create_item():
         items.add_item(
             title=title,
             description=description,
-            price=price,
-            quantity=quantity,
+            price=int(price),
+            quantity=int(quantity),
             user_id=session["id"],
             classes=classes,
             image_filename=image_filename
         )
         flash("Product added successfully!", "success")
-        return redirect("/")
+        return redirect(url_for("index"))
     except Exception as e:
         if image_filename:
             try:

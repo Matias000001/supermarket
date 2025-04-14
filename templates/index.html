@@ -3,62 +3,71 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>shop</title>
-    <style>
-      .captcha-box {
-        border: 1px solid #ccc;
-        padding: 15px;
-        margin: 20px 0;
-        max-width: 300px;
-      }
-    </style>
+    <link rel="stylesheet" href="/static/main.css">
+    <title>SUPERMARKET</title>
   </head>
   <body>
     {% if session.username %}
-      <p>You are logged in as {{ session.username }}.</p>
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <ul>
             {% for category, message in messages %}
               <li class="{{ category }}">{{ message }}</li>
             {% endfor %}
+            {% set _ = get_flashed_messages() %}
           </ul>
         {% endif %}
       {% endwith %}
-      <h2>SUPERMARKET</h2>
-      <p>
-        <a href="/">Mainpage</a>
-        <a href="/user/{{ session.get('id') }}">Homepage</a>
-        <a href="/new_item">New item</a>
-        <a href="/find_item">Find item</a>
-        <a href="/basket">Shopping Basket</a>
-        <a href="/messages">Messages</a>
-        <a href="/logout">Logout</a>
-      </p>
+      <div class="header">
+        <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
+      </div>
+
+      <div class="nav">
+        <nav>
+          <ul>
+            <li><a href="/">Mainpage</a></li>
+            <li><a href="/user/{{ session.get('id') }}">Homepage</a></li>
+            <li><a href="/new_item">New item</a></li>
+            <li><a href="/find_item">Find item</a></li>
+            <li><a href="/basket">Shopping Basket</a></li>
+            <li><a href="/messages">Messages</a></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="content">
       <h2>Products for sale</h2>
-      <ul>
-        {% for item in items %}
-          <li>
-            <a href="/item/{{ item.id }}">{{ item.title }}</a>
-            <br>
-            Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a>
-            {% if item.image_filename %}
-              <br>
-              <a href="{{ url_for('static', filename='uploads/' + item.image_filename) }}" target="_blank">
-                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="150">
-              </a>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-      {% if page is defined and page_count is defined %}
-        <a href="/{{ page - 1 }}">&lt;&lt;</a>
-        Page {{ page }} / {{ page_count }}
-        <a href="/{{ page + 1 }}">&gt;&gt;</a>
-      {% endif %}
-      <hr />
+        <ul>
+          {% for item in items %}
+            <div class="item_index">
+              <p>
+                <a href="/item/{{ item.id }}">{{ item.title }}</a>
+              </p>
+              <p>
+                Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a>
+              </p>
+              {% if item.image_filename %}
+                <p>
+                  <a href="{{ url_for('static', filename='uploads/' + item.image_filename) }}" target="_blank">
+                    <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="150">
+                  </a>
+                </p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </ul>
+        {% if page is defined and page_count is defined %}
+          <a href="/{{ page - 1 }}">&lt;&lt;</a>
+            Page {{ page }} / {{ page_count }}
+          <a href="/{{ page + 1 }}">&gt;&gt;</a>
+        {% endif %}
+        <hr />
+    </div>
     {% elif not session.captcha_passed %}
-      <h2>SUPERMARKET</h2>
+      <div class="header">
+        <h2>SUPERMARKET</h2>
+      </div>
       {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul>
@@ -79,7 +88,9 @@
       </div>
       <hr />
     {% else %}
-      <h2>SUPERMARKET</h2>
+      <div class="header">
+        <h2>SUPERMARKET</h2>
+      </div>
       {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul>

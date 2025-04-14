@@ -3,22 +3,39 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/main.css">
     <title>find item</title>
   </head>
   <body>
     {% if session.username %}
-    <p>You are logged in as {{ session.username }}.</p>
-    {% endif %}
-    <h2>SUPERMARKET</h2>
-    <p>
-      <a href="/">Mainpage</a>
-      <a href="/user/{{ session.get('id') }}">Homepage</a>
-      <a href="/new_item">New item</a>
-      <a href="/find_item">Find item</a>
-      <a href="/basket">Shopping Basket</a>
-      <a href="/messages">Messages</a>
-      <a href="/logout">Logout</a>
-    </p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+          {% set _ = get_flashed_messages() %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <div class="header">
+      <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
+    </div>
+
+    <div class="nav">
+      <nav>
+        <ul>
+          <li><a href="/">Mainpage</a></li>
+          <li><a href="/user/{{ session.get('id') }}">Homepage</a></li>
+          <li><a href="/new_item">New item</a></li>
+          <li><a href="/find_item">Find item</a></li>
+          <li><a href="/basket">Shopping Basket</a></li>
+          <li><a href="/messages">Messages</a></li>
+          <li><a href="/logout">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+
     <h2>Find item</h2>
     <form action="/find_item" method="GET">
       <p>
@@ -34,6 +51,7 @@
       {% for item in results %}
       <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
       {% endfor %}
+    {% endif %}
     {% endif %}
   </body>
 </html>

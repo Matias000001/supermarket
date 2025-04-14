@@ -3,67 +3,88 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="/static/main.css">
     <title>edit_item</title>
   </head>
   <body>
     {% if session.username %}
-    <p>You are logged in by username {{ session.username }}.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul>
+            {% for category, message in messages %}
+              <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            {% set _ = get_flashed_messages() %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+      <div class="header">
+        <h2>SUPERMARKET</h2>
+      </div>
+
+      <div class="nav">
+        <nav>
+          <ul>
+            <li><a href="/">Mainpage</a></li>
+            <li><a href="/user/{{ session.get('id') }}">Homepage</a></li>
+            <li><a href="/new_item">New item</a></li>
+            <li><a href="/find_item">Find item</a></li>
+            <li><a href="/basket">Shopping Basket</a></li>
+            <li><a href="/messages">Messages</a></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+
+    <div class="content">
+      <h2>Edit item</h2>
+      <form action="/update_item" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <p>
+          <label for="title">Title:</label><br />
+          <input type="text" id="title" name="title" value="{{ item.title }}" maxlength="50" required />
+        </p>
+        <p>
+          <label for="description">Description:</label><br />
+          <textarea id="description" rows="8" cols="60" name="description" maxlength="1000" required>{{ item.description }}</textarea>
+        </p>
+          <input type="hidden" name="item_id" value="{{ item.id }}" />
+        <p>
+          <label for="quantity">Quantity:</label><br />
+          <input type="number" id="quantity" name="quantity" value="{{ item.quantity }}" min="1" required />
+        </p>
+        {% if item.image_filename %}
+        <p>
+          Current image:<br />
+          <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="100" /><br />
+          <label>
+            <input type="checkbox" name="remove_image" value="1" /> Remove current image
+          </label>
+        </p>
+        {% endif %}
+        <p>
+          <label for="new_image">Change image:</label><br />
+          <input type="file" id="new_image" name="new_image" accept="image/*" />
+        </p>
+        {% for class in all_classes %}
+        <p>
+          <label for="class_{{ loop.index }}">{{ class }}:</label><br />
+          <select id="class_{{ loop.index }}" name="classes">
+            {% for option in all_classes[class] %}
+              <option value="{{ class }}:{{ option }}"
+                {% if class in classes and classes[class] == option %}selected{% endif %}>
+                {{ option }}
+              </option>
+            {% endfor %}
+          </select>
+        </p>
+        {% endfor %}
+        <input type="submit" value="Update" />
+        <p>
+          <a href="/item/{{ item.id }}">Back</a>
+        </p>
+      </form>
+    </div>
     {% endif %}
-    <h2>SUPERMARKET</h2>
-    <p>
-      <a href="/">Mainpage</a>
-      <a href="/user/{{ session.get('id') }}">Homepage</a>
-      <a href="/new_item">New item</a>
-      <a href="/basket">Shopping Basket</a>
-      <a href="/find_item">Find item</a>
-      <a href="/logout">Logout</a>
-    </p>
-    <h2>Edit item</h2>
-    <form action="/update_item" method="post" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <p>
-        <label for="title">Title:</label><br />
-        <input type="text" id="title" name="title" value="{{ item.title }}" maxlength="50" required />
-      </p>
-      <p>
-        <label for="description">Description:</label><br />
-        <textarea id="description" rows="8" cols="60" name="description" maxlength="1000" required>{{ item.description }}</textarea>
-      </p>
-      <input type="hidden" name="item_id" value="{{ item.id }}" />
-      <p>
-        <label for="quantity">Quantity:</label><br />
-        <input type="number" id="quantity" name="quantity" value="{{ item.quantity }}" min="1" required />
-      </p>
-      {% if item.image_filename %}
-      <p>
-        Current image:<br />
-        <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="100" /><br />
-        <label>
-          <input type="checkbox" name="remove_image" value="1" /> Remove current image
-        </label>
-      </p>
-      {% endif %}
-      <p>
-        <label for="new_image">Change image:</label><br />
-        <input type="file" id="new_image" name="new_image" accept="image/*" />
-      </p>
-      {% for class in all_classes %}
-      <p>
-        <label for="class_{{ loop.index }}">{{ class }}:</label><br />
-        <select id="class_{{ loop.index }}" name="classes">
-          {% for option in all_classes[class] %}
-          <option value="{{ class }}:{{ option }}"
-            {% if class in classes and classes[class] == option %}selected{% endif %}>
-            {{ option }}
-          </option>
-          {% endfor %}
-        </select>
-      </p>
-      {% endfor %}
-      <input type="submit" value="Update" />
-      <p>
-        <a href="/item/{{ item.id }}">Back</a>
-      </p>
-    </form>
   </body>
 </html>

@@ -3,22 +3,39 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/main.css">
     <title>Shopping Basket</title>
   </head>
   <body>
     {% if session.username %}
-    <p>You are logged in as {{ session.username }}.</p>
-    {% endif %}
-    <h2>SUPERMARKET</h2>
-    <p>
-        <a href="/">Mainpage</a>
-        <a href="/user/{{ session.get('id') }}">Homepage</a>
-        <a href="/new_item">New item</a>
-        <a href="/find_item">Find item</a>
-        <a href="/basket">Shopping Basket</a>
-        <a href="/messages">Messages</a>
-        <a href="/logout">Logout</a>
-    </p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+          {% set _ = get_flashed_messages() %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <div class="header">
+      <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
+    </div>
+
+    <div class="nav">
+      <nav>
+        <ul>
+          <li><a href="/">Mainpage</a></li>
+          <li><a href="/user/{{ session.get('id') }}">Homepage</a></li>
+          <li><a href="/new_item">New item</a></li>
+          <li><a href="/find_item">Find item</a></li>
+          <li><a href="/basket">Shopping Basket</a></li>
+          <li><a href="/messages">Messages</a></li>
+          <li><a href="/logout">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+
     <h2>Shopping Basket</h2>
     {% if purchases %}
     <form action="/update_basket" method="POST">
@@ -45,9 +62,10 @@
         <h3>Total price: {{ purchases | sum(attribute='total_price') }} €</h3>
         <button type="submit">Update quantities</button>
         <button type="submit" formaction="/checkout">Proceed to checkout</button>
-    </form>
-{% else %}
+      </form>
+      {% else %}
       <p>Your shopping basket is empty.</p>
+    {% endif %}
     {% endif %}
   </body>
 </html>

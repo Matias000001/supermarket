@@ -3,25 +3,42 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/main.css">
     <title>Userpage {{ user.username }}</title>
   </head>
   <body>
     {% if session.username %}
-      <p>You are logged in as {{ session.username }}.</p>
-    {% endif %}
-    <h2>SUPERMARKET</h2>
-    {% if session.username %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+          {% set _ = get_flashed_messages() %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <div class="header">
+      <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
+    </div>
+
+    <div class="nav">
       <nav>
-        <a href="/">Mainpage</a>
-        <a href="/user/{{ session.get('id') }}">Homepage</a>
-        <a href="/new_item">New item</a>
-        <a href="/find_item">Find item</a>
-        <a href="/basket">Shopping Basket</a>
-        <a href="/messages">Messages</a>
-        <a href="/logout">Logout</a>
+        <ul>
+          <li><a href="/">Mainpage</a></li>
+          <li><a href="/user/{{ session.get('id') }}">Homepage</a></li>
+          <li><a href="/new_item">New item</a></li>
+          <li><a href="/find_item">Find item</a></li>
+          <li><a href="/basket">Shopping Basket</a></li>
+          <li><a href="/messages">Messages</a></li>
+          <li><a href="/logout">Logout</a></li>
+        </ul>
       </nav>
+    </div>
     {% endif %}
+
     <h3>{{ user.username }}'s Profile</h3>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <ul>
@@ -32,9 +49,10 @@
       </ul>
     {% endif %}
   {% endwith %}
+
     {% if session.username and session.get('id') != user.id %}
-      <section class="message-form">
-        <h3>Send message to {{ user.username }}</h3>
+      <section class="send_msg">
+        <p>Send message to {{ user.username }}</p>
         <form method="post" action="/send_message/{{ user.id }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <label for="message-content"></label>
@@ -43,24 +61,29 @@
         </form>
       </section>
     {% endif %}
+
     {% if image %}
-    <img src="{{ url_for('user_image', user_id=user.id) }}" alt="profile picture" width="200" height="200" />
-        {% else %}
+      <div class="profile_pic">
+        <img src="{{ url_for('user_image', user_id=user.id) }}" alt="profile picture" width="200" height="200" />
+      </div>
+    {% else %}
       <p>No profile picture</p>
     {% endif %}
+
     <form action="/add_image" method="post" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <p>
         <label for="profile-image">Profile picture:</label>
         <input type="file" name="image" id="profile-image" accept=".jpg, .jpeg, .png" />
       </p>
-      <input type="submit" value="Download" />
+      <input type="submit" value="Upload" />
     </form>
+
     <h3>Products for sale ({{ items | count }})</h3>
-    <ul class="product-list">
+    <ul class="content">
       {% for item in items %}
-        <li class="product-item">
-          <a href="/item/{{ item.id }}">{{ item.title }}</a>
+        <li class="item_index">
+          <a class="product-link" href="/item/{{ item.id }}">{{ item.title }}</a>
           {% if item.image_filename %}
             <div class="product-image">
               <a href="{{ url_for('static', filename='uploads/' + item.image_filename) }}" target="_blank">
