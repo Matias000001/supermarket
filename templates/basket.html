@@ -27,11 +27,16 @@
           {% for purchase in purchases %}
           <li>
               <strong>{{ purchase["title"] }}</strong>
-              <input type="number" name="quantity_{{ purchase['purchase_id'] }}"
-                     value="{{ purchase['quantity'] }}" min="1"
-                     max="{{ quantities[purchase['item_id']] }}" style="width: 50px;">
-              pcs - {{ purchase["price_at_purchase"] }} € each -
-              Total: {{ purchase["total_price"] }} €
+              <label for="quantity_{{ purchase['purchase_id'] }}">Quantity:</label>
+              <input type="number"
+                     name="quantity_{{ purchase['purchase_id'] }}"
+                     value="{{ purchase['quantity'] }}"
+                     min="1"
+                     max="{{ quantities[purchase['item_id']] }}"
+                     style="width: 50px;">
+              <span aria-label="Price per item: {{ purchase['price_at_purchase'] }} euros. Total: {{ purchase['total_price'] }} euros.">
+                {{ purchase["quantity"] }} pcs - {{ purchase["price_at_purchase"] }} € each - Total: {{ purchase["total_price"] }} €
+              </span>
               <button type="submit" formaction="/remove_from_basket/{{ purchase['purchase_id'] }}"
                       formmethod="POST">Remove</button>
           </li>

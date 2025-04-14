@@ -21,7 +21,11 @@
     </p>
     <h2>Find item</h2>
     <form action="/find_item" method="GET">
-      <p>Search for: <input type="text" name="query" value="{{ query }}" /></p>
+      <p>
+        <label for="query">Search for:</label>
+        <input type="text" id="query" name="query" value="{{ query }}" />
+      </p>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="submit" value="search" />
     </form>
     {% if query %}

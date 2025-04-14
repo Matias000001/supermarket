@@ -21,35 +21,36 @@
     <form action="/create_item" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <p>
-        Title: <br />
-        <input type="text" name="title" maxlength="50" required />
+        <label for="id">Title</label>:<br />
+        <input id="id" type="text" name="title" maxlength="50" required />
       </p>
       <p>
-        Description: <br />
-        <textarea rows="8" cols="60" name="description" required></textarea>
+        <label for="description">Description</label>:<br />
+        <textarea id="description" rows="8" cols="60" name="description" required></textarea>
       </p>
       <p>
-        Price: <br />
-        <input type="text" name="price" size="8" pattern="^[1-9][0-9]{0,3}$" /> €
+        <label for="price">Price</label>:<br />
+        <input id="price" type="text" name="price" size="8" pattern="^[1-9][0-9]{0,3}$" /> €
       </p>
       <p>
-        Quantity: <br />
-        <input type="number" name="quantity" min="1" required />
+        <label for="quantity">Quantity</label>:<br />
+        <input id="quantity" type="number" name="quantity" min="1" required />
       </p>
       <p>
-        Image: <br />
-        <input type="file" name="image" accept="image/*" />
+        <label for="image">Image</label>:<br />
+        <input id="image" type="file" name="image" accept="image/*" />
       </p>
       {% for class in classes %}
-      <p>
-        {{ class }}: <br />
-        <select name="classes">
-          <option value="">(choose)</option>
-          {% for option in classes[class] %}
-          <option value="{{ class }}:{{ option }}">{{ option }}</option>
-          {% endfor %}
-        </select>
-      </p>
+        <p>
+          <label>{{ class }}: <br />
+            <select name="classes">
+              <option value="">(choose)</option>
+              {% for option in classes[class] %}
+              <option value="{{ class }}:{{ option }}">{{ option }}</option>
+              {% endfor %}
+            </select>
+         </label>
+        </p>
       {% endfor %}
       <input type="submit" value="Create" />
     </form>

@@ -22,6 +22,11 @@ logging.basicConfig(level=logging.INFO)
 
 csrf = CSRFProtect(app)
 
+def validate_csrf():
+    if "csrf_token" not in session or "csrf_token" not in request.form:
+        return False
+    return session["csrf_token"] == request.form["csrf_token"]
+
 limiter = Limiter(
     app=app,
     key_func=lambda: session.get("user_id") or request.headers.get("X-Unique-ID"),
@@ -53,11 +58,6 @@ def require_login():
     if "username" not in session:
         abort(403)
 
-def validate_csrf():
-    if "csrf_token" not in session or "csrf_token" not in request.form:
-        return False
-    return session["csrf_token"] == request.form["csrf_token"]
-
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -77,18 +77,30 @@ def after_request(response):
 @app.route("/add_image", methods=["GET", "POST"])
 def add_image():
     require_login()
+    user_id = session["id"]
     if request.method == "GET":
         return render_template("add_image.html")
     if request.method == "POST":
-        file = request.files["image"]
-        if file and allowed_file(file.filename):
-            image = file.read()
-            if len(image) > 100 * 1024:
-                return "Error: Too big size!"
-            user_id = session["id"]
-            users.update_image(user_id, image)
+        if 'image' not in request.files:
+            flash("No file selected", "error")
             return redirect("/user/" + str(user_id))
-    return redirect("/add_image")
+        file = request.files["image"]
+        if file.filename == '':
+            flash("No selected file", "error")
+            return redirect("/user/" + str(user_id))
+        if file and allowed_file(file.filename):
+            try:
+                image = file.read()
+                if len(image) > 100 * 1024:
+                    flash("File too large (max 100KB)", "error")
+                    return redirect("/user/" + str(user_id))
+                users.update_image(user_id, image)
+                flash("Image updated successfully!", "success")
+                return redirect("/user/" + str(user_id))
+            except Exception as e:
+                flash(f"Error: {str(e)}", "error")
+                return redirect("/user/" + str(user_id))
+    return redirect("/user/" + str(user_id))
 
 @app.route("/user_image/<int:user_id>")
 def user_image(user_id):
@@ -358,28 +370,30 @@ def logout():
         session.clear()
     return redirect("/")
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
-
-@app.route("/create", methods=["POST"])
-def create():
-    username = request.form["username"]
-    password1 = request.form["password1"]
-    password2 = request.form["password2"]
-    if password1 != password2:
-        flash("Passwords do not match", "error")
-        return redirect("register")
-    try:
-        users.create_user(username, password1)
-        flash("Registration successful! Please login.", "success")
-        return(redirect("login"))
-    except sqlite3.IntegrityError:
-        flash("Username already taken", "error")
-        return redirect("register")
-    except sqlite3.OperationalError:
-        flash("Database busy, please try again", "error")
-    return redirect("index")
+    if request.method == "GET":
+        return render_template("register.html", filled={})
+    if request.method == "POST":
+        username = request.form["username"]
+        password1 = request.form["password1"]
+        password2 = request.form["password2"]
+        if len(username) > 16:
+            flash("Too long username! Must be under 16 characters")
+            return render_template("register.html", filled={"username": username})
+        if password1 != password2:
+            flash("Passwords do not match", "error")
+            return render_template("register.html", filled={"username": username})
+        try:
+            users.create_user(username, password1)
+            flash("Registration successful! Please login.", "success")
+            return redirect("/login")
+        except sqlite3.IntegrityError:
+            flash("Username already taken", "error")
+            return render_template("register.html", filled={"username": username})
+        except sqlite3.OperationalError:
+            flash("Database busy, please try again", "error")
+            return redirect("/")
 
 @app.route("/messages")
 def show_messages():

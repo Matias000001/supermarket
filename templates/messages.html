@@ -68,6 +68,7 @@
         <p></p>
         <form action="/send_message/{{ conversation.partner_id }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label for="content">Message</label>:<br />
           <textarea name="content" placeholder="Write a message to {{ conversation.partner_name }}" required></textarea><br>
           <button type="submit">Send</button>
         </form>

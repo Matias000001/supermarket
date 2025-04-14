@@ -7,6 +7,7 @@
   </head>
   <body>
     <h2>SUPERMARKET</h2>
+    <h3>Register here</h3>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul>
@@ -16,18 +17,18 @@
         </ul>
       {% endif %}
     {% endwith %}
-    <form action="/create" method="post">
+    <form action="/register" method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <p>
-        Username: <br />
-        <input type="text" name="username" />
+        <label for="username">Username:</label><br />
+        <input type="text" name="username" value="{{ filled.username }}" maxlength="16" />
       </p>
       <p>
-        Password: <br />
+        <label for="password1">Password:</label><br />
         <input type="password" name="password1" />
       </p>
       <p>
-        Password: <br />
+        <label for="password2">Password:</label><br />
         <input type="password" name="password2" />
       </p>
       <input type="submit" value="Create account" />

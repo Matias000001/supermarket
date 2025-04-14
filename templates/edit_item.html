@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>edit_item</title>
   </head>
   <body>
@@ -20,41 +20,41 @@
     </p>
     <h2>Edit item</h2>
     <form action="/update_item" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <p>
-        Title: <br />
-        <input type="text" name="title" value="{{ item.title }}" maxlength="50" required/>
+        <label for="title">Title:</label><br />
+        <input type="text" id="title" name="title" value="{{ item.title }}" maxlength="50" required />
       </p>
       <p>
-        Description:<br />
-        <textarea rows="8" cols="60" name="description" maxlength="1000" required>{{ item.description }}</textarea>
+        <label for="description">Description:</label><br />
+        <textarea id="description" rows="8" cols="60" name="description" maxlength="1000" required>{{ item.description }}</textarea>
       </p>
-      <input type="hidden" name="item_id" value="{{ item.id }}"/>
+      <input type="hidden" name="item_id" value="{{ item.id }}" />
       <p>
-        Quantity: <br />
-        <input type="number" name="quantity" value="{{ item.quantity }}" min="1" required/>
+        <label for="quantity">Quantity:</label><br />
+        <input type="number" id="quantity" name="quantity" value="{{ item.quantity }}" min="1" required />
       </p>
       {% if item.image_filename %}
       <p>
-        Current image: <br />
-        <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="100">
-        <br />
+        Current image:<br />
+        <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="100" /><br />
         <label>
-          <input type="checkbox" name="remove_image" value="1"> Remove current image
+          <input type="checkbox" name="remove_image" value="1" /> Remove current image
         </label>
       </p>
       {% endif %}
       <p>
-        Change image: <br />
-        <input type="file" name="new_image" accept="image/*">
+        <label for="new_image">Change image:</label><br />
+        <input type="file" id="new_image" name="new_image" accept="image/*" />
       </p>
       {% for class in all_classes %}
       <p>
-        {{ class }}: <br />
-        <select name="classes">
+        <label for="class_{{ loop.index }}">{{ class }}:</label><br />
+        <select id="class_{{ loop.index }}" name="classes">
           {% for option in all_classes[class] %}
           <option value="{{ class }}:{{ option }}"
-              {% if class in classes and classes[class] == option %}selected{% endif %}>
-              {{ option }}
+            {% if class in classes and classes[class] == option %}selected{% endif %}>
+            {{ option }}
           </option>
           {% endfor %}
         </select>
@@ -62,7 +62,7 @@
       {% endfor %}
       <input type="submit" value="Update" />
       <p>
-      <a href="/item/{{ item.id }}">Back</a>
+        <a href="/item/{{ item.id }}">Back</a>
       </p>
     </form>
   </body>
