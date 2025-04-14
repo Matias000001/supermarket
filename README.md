@@ -29,11 +29,11 @@ Ominaisuudet:
 * Käyttäjä pystyy etsimään ilmoituksia hakusanalla tai muulla perusteella.
 * Estetty pääsy muokkaamaan tai poistamaan toisen käyttäjän ilmoituksia, eli lisätty oikeuksien tarkitukset.
 
-Feature list 11.4
+Feature list 14.4
 * Käyttäjä pystyy luomaan tunnuksen ja kirjautumaan sisään sovellukseen.
 * Vain kirjautunut käyttäjä pystyy katselemaan ilmoituksia ja pääsemään kauppaan sisälle.
 * Käyttäjä pystyy lisäämään, muokkaamaan ja poistamaan omia ilmoituksia.
-* Käyttäjä pystyy myös lisäämään ilmotukselle kuvan, kappalemäärän, tavaraluokan ja kuntoluokan.
+* Käyttäjä pystyy myös lisäämään ilmotukselle kuvan (kuva tiedostossa), kappalemäärän, tavaraluokan ja kuntoluokan.
 * Käyttäjä näkee sovellukseen lisätyt ilmoitukset.
 * Käyttäjä pystyy etsimään ilmoituksia hakusanalla.
 * Käyttäjä pystyy tekemään ostoksia ja ostokset menevät ostoskoriin.
@@ -45,12 +45,17 @@ Feature list 11.4
 * Lisätty Fernet salaus viestien tallentamiseen.
 * Lisätty CSRF-suoja, lokitus ja rate limitteri.
 * Lisätty yksinkertainen CAPTCHA 
-* Lisätty profiilikuvan lisäysmahdollisuus
+* Lisätty profiilikuvan lisäysmahdollisuus (kuva taulussa BLOB)
 * Lisätty sivutus
+* Lisätty seed.py ja testattu seuraavilla arvoilla ilman huomattua hitautta:
+user_count = 100000
+item_count = 1000000
+message_count = 100000
+purchase_count = 100000
+* Lisätty indeksointi items tauluun
+* Lisätty tauluihin validointeja
 
 TODO:
-- seed.py loppuun
-- indeksoinnit
 - label kentät
 - Useampien kuvien lisäys.
 - parempi kuvien validointi
@@ -59,3 +64,4 @@ TODO:
 - CSS ja koko design sivulle (itse tehtynä)
 - Profiilin sivu jonne käyttäjä syöttää tietonsa
 - Lisää alasivuja, jossa tietoa Supermarketista
+...

@@ -81,9 +81,10 @@ def items_count():
     return result[0][0] if result else 0
 
 def get_items(page, page_size):
-    sql = """SELECT id, title, description, price, quantity, image_filename
-             FROM items
-             ORDER BY id DESC
+    sql = """SELECT i.id, i.title, i.description, i.price, i.quantity, u.id AS user_id, u.username, i.image_filename
+             FROM items i
+             JOIN users u ON i.user_id = u.id
+             ORDER BY i.id DESC
              LIMIT ? OFFSET ?"""
     limit = page_size
     offset = page_size * (page - 1)

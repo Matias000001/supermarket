@@ -1,8 +1,8 @@
-import math
+import math, logging
 import os, re, sqlite3, random, time
 import config, items, users, messages, basket
-import logging
-from flask import Flask, abort, flash, make_response, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, make_response, redirect
+from flask import g, render_template, request, session, url_for
 from cryptography.fernet import Fernet
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
@@ -25,7 +25,7 @@ csrf = CSRFProtect(app)
 limiter = Limiter(
     app=app,
     key_func=lambda: session.get("user_id") or request.headers.get("X-Unique-ID"),
-    default_limits=["20000 per day", "50000 per hour"]
+    default_limits=["20000000 per day", "50000000 per hour"]
 )
 
 UPLOAD_FOLDER = "static/uploads"
@@ -60,6 +60,19 @@ def validate_csrf():
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.before_request
+def before_request():
+    g.start_time = time.time()
+    print(f"Session data: {dict(session)}")
+
+@app.after_request
+def after_request(response):
+    start_time = getattr(g, 'start_time', None)
+    if start_time is not None:
+        elapsed_time = round(time.time() - start_time, 2)
+        print("elapsed time:", elapsed_time, "s")
+    return response
 
 @app.route("/add_image", methods=["GET", "POST"])
 def add_image():
@@ -101,10 +114,6 @@ def verify_captcha():
     return redirect(url_for("index"))
 
 @app.before_request
-def check_session():
-    print(f"Session data: {dict(session)}")
-
-@app.before_request
 def require_captcha():
     if request.path in ["/login", "/register"] and not session.get("captcha_passed"):
         abort(403, "Solve CAPTCHA first.")
@@ -123,6 +132,7 @@ def index(page=1):
         if page > page_count:
             return redirect(f"/{page_count}")
         current_items = items.get_items(page, page_size)
+        print(f"TESTAan current_items{dict(current_items[0])}")
         return render_template("index.html", page=page, page_count=page_count, items=current_items)
     if not session.get("captcha_passed"):
         captcha_question = generate_captcha()

@@ -10,10 +10,10 @@ db.execute("DELETE FROM items")
 db.execute("DELETE FROM messages")
 db.execute("DELETE FROM purchases")
 
-user_count = 100
-item_count = 100
-message_count = 100
-purchase_count = 100
+user_count = 100000
+item_count = 1000000
+message_count = 100000
+purchase_count = 100000
 
 def random_password_hash():
     password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))

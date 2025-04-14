@@ -2,17 +2,20 @@ CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    image BLOB
+    image BLOB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE items (
-    id INTEGER PRIMARY KEY,
-    title TEXT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
     description TEXT,
-    price INTEGER,
-    user_id INTEGER REFERENCES users,
-    quantity INTEGER,
-    image_filename TEXT
+    price INTEGER NOT NULL CHECK(price >= 0),
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1 CHECK(quantity >= 0),
+    image_filename TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE classes (

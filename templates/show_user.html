@@ -26,6 +26,7 @@
       <section class="message-form">
         <h3>Send message to {{ user.username }}</h3>
         <form method="post" action="/send_message/{{ user.id }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <textarea name="content" required placeholder="Write your message..."></textarea><br>
           <button type="submit">Send Message</button>
         </form>
@@ -59,7 +60,7 @@
           {% endif %}
         </li>
       {% else %}
-        <li>No products available</li>
+        <li>No products</li>
       {% endfor %}
     </ul>
   </body>
