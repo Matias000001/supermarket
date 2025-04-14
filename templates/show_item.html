@@ -56,8 +56,8 @@
         Pcs:
         <select name="quantity" required>
           <option value="" disabled selected>Select quantity</option>
-            {% for i in range(1, [item.quantity, 5]|min + 1) %}
-          <option value="{{ i }}">{{ i }}</option>
+          {% for i in range(1, item.quantity + 1) %}
+            <option value="{{ i }}">{{ i }}</option>
           {% endfor %}
         </select>
         <input type="hidden" name="item_id" value="{{ item.id }}"/>

@@ -51,8 +51,23 @@
           </li>
         {% endfor %}
       </ul>
+      {% if page is defined and page_count is defined %}
+        <a href="/{{ page - 1 }}">&lt;&lt;</a>
+        Page {{ page }} / {{ page_count }}
+        <a href="/{{ page + 1 }}">&gt;&gt;</a>
+      {% endif %}
+      <hr />
     {% elif not session.captcha_passed %}
       <h2>SUPERMARKET</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
       <div class="captcha-box">
         <h3>Are you a robot?</h3>
         <form action="/verify_captcha" method="POST">
@@ -62,8 +77,18 @@
           <button type="submit">Continue</button>
         </form>
       </div>
+      <hr />
     {% else %}
       <h2>SUPERMARKET</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
       <p>
         <a href="/login">LOGIN</a>
         <a href="/register">REGISTER</a>

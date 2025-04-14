@@ -46,8 +46,11 @@ Feature list 11.4
 * Lisätty CSRF-suoja, lokitus ja rate limitteri.
 * Lisätty yksinkertainen CAPTCHA 
 * Lisätty profiilikuvan lisäysmahdollisuus
+* Lisätty sivutus
 
 TODO:
+- seed.py loppuun
+- indeksoinnit
 - label kentät
 - Useampien kuvien lisäys.
 - parempi kuvien validointi

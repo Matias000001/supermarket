@@ -1,13 +1,11 @@
 import db
 
 def get_all_classes():
-    sql = "SELECT title, value FROM classes ORDER BY id"
+    sql = "SELECT DISTINCT title, value FROM classes ORDER BY id"
     result = db.query(sql)
     classes = {}
     for title, value in result:
-        classes[title] = []
-    for title, value in result:
-        classes[title].append(value)
+        classes.setdefault(title, []).append(value)
     return classes
 
 def add_item(title, description, price, quantity, user_id, classes, image_filename=None):
@@ -31,13 +29,6 @@ def get_purchases(user_id):
                     LEFT JOIN items i ON p.item_id = i.id
                     WHERE p.user_id = ? AND p.status = 'pending'"""
     return db.query(sql, [user_id])
-
-def get_items():
-    sql = """SELECT i.id, i.title, i.quantity, i.image_filename, u.id AS user_id, u.username
-                    FROM items i
-                    JOIN users u ON i.user_id = u.id
-                    ORDER BY i.id DESC"""
-    return db.query(sql)
 
 def get_user_items(user_id):
     sql = "SELECT id, title, quantity, image_filename FROM items WHERE user_id = ? ORDER BY id DESC"
@@ -83,3 +74,17 @@ def find_items(query):
                     ORDER BY id DESC"""
     like = "%" + query + "%"
     return db.query(sql, [like, like])
+
+def items_count():
+    sql = "SELECT COUNT(*) FROM items"
+    result = db.query(sql)
+    return result[0][0] if result else 0
+
+def get_items(page, page_size):
+    sql = """SELECT id, title, description, price, quantity, image_filename
+             FROM items
+             ORDER BY id DESC
+             LIMIT ? OFFSET ?"""
+    limit = page_size
+    offset = page_size * (page - 1)
+    return db.query(sql, [limit, offset])

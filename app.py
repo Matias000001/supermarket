@@ -1,3 +1,4 @@
+import math
 import os, re, sqlite3, random, time
 import config, items, users, messages, basket
 import logging
@@ -24,7 +25,7 @@ csrf = CSRFProtect(app)
 limiter = Limiter(
     app=app,
     key_func=lambda: session.get("user_id") or request.headers.get("X-Unique-ID"),
-    default_limits=["200 per day", "500 per hour"]
+    default_limits=["20000 per day", "50000 per hour"]
 )
 
 UPLOAD_FOLDER = "static/uploads"
@@ -109,13 +110,23 @@ def require_captcha():
         abort(403, "Solve CAPTCHA first.")
 
 @app.route("/")
-def index():
+@app.route("/<int:page>")
+def index(page=1):
     if "username" in session:
         session.pop("captcha_passed", None)
-        all_items = items.get_items()
-        return render_template("index.html", items=all_items)
+        session.pop("captcha_passed", None)
+        page_size = 10
+        item_count = items.items_count()
+        page_count = max(math.ceil(item_count / page_size), 1)
+        if page < 1:
+            return redirect("/1")
+        if page > page_count:
+            return redirect(f"/{page_count}")
+        current_items = items.get_items(page, page_size)
+        return render_template("index.html", page=page, page_count=page_count, items=current_items)
     if not session.get("captcha_passed"):
         captcha_question = generate_captcha()
+        print("CAPTCHA not passed")
         return render_template("index.html", captcha_question=captcha_question)
     return render_template("index.html")
 
@@ -321,9 +332,12 @@ def login():
             session["username"] = username
             session["id"] = user_id
             session.permanent = True
+            session.modified = True
+            flash("Login successful!", "success")
             return redirect("/")
         else:
-            return "Error: Invalid username or password"
+            flash("Error: Invalid username or password")
+            return redirect("/")
 
 @app.route("/logout")
 def logout():
