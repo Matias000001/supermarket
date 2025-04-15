@@ -4,4 +4,3 @@ database.db
 config.py
 keyfile.key
 static/uploads/*
-generate_key.py
