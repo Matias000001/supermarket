@@ -54,6 +54,7 @@ message_count = 100000
 purchase_count = 100000
 * Lisätty indeksointi items tauluun
 * Lisätty tauluihin validointeja
+* Lisätty yksinkertainen CSS
 
 TODO:
 - label kentät
@@ -61,7 +62,6 @@ TODO:
 - parempi kuvien validointi
 - näyttää että tuotetta ei saatavilla jos varastosaldo mennyt nollaan.
 - Checkout (selvitä palveluntarjoajien API:t).
-- CSS ja koko design sivulle (itse tehtynä)
 - Profiilin sivu jonne käyttäjä syöttää tietonsa
 - Lisää alasivuja, jossa tietoa Supermarketista
 ...
