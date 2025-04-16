@@ -9,6 +9,6 @@ import os
 
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-key")
 
-# aseta salainen avain ympäristömuuttujaksi palvelimella ~/.bashrc tiedostoon
+# Set the secret key as an environment variable on the server ~/.bashrc to file
 # echo "export SECRET_KEY="39e5b8dd1de7afdc786df2b0cdf7a8f1"" >> ~/.bashrc
 # source ~/.bashrc

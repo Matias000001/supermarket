@@ -36,8 +36,8 @@
       </nav>
     </div>
     <h2>New item</h2>
-    <form action="/create_item" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <form action="/create_item" method="POST" enctype="multipart/form-data" class="new-item-form">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
       <p>
         <label for="id">Title</label>:<br />
         <input id="id" type="text" name="title" maxlength="50" required />
@@ -48,7 +48,7 @@
       </p>
       <p>
         <label for="price">Price</label>:<br />
-        <input id="price" type="text" name="price" size="8" pattern="^[1-9][0-9]{0,3}$" /> €
+        <input id="price" type="text" name="price" size="8" pattern="^[1-9][0-9]{0,3}$" />
       </p>
       <p>
         <label for="quantity">Quantity</label>:<br />
@@ -67,7 +67,7 @@
               <option value="{{ class }}:{{ option }}">{{ option }}</option>
               {% endfor %}
             </select>
-         </label>
+          </label>
         </p>
       {% endfor %}
       <input type="submit" value="Create" />

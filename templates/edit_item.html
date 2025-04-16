@@ -21,7 +21,6 @@
       <div class="header">
         <h2>SUPERMARKET</h2>
       </div>
-
       <div class="nav">
         <nav>
           <ul>
@@ -35,56 +34,66 @@
           </ul>
         </nav>
       </div>
-
-    <div class="content">
-      <h2>Edit item</h2>
-      <form action="/update_item" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <p>
-          <label for="title">Title:</label><br />
-          <input type="text" id="title" name="title" value="{{ item.title }}" maxlength="50" required />
-        </p>
-        <p>
-          <label for="description">Description:</label><br />
-          <textarea id="description" rows="8" cols="60" name="description" maxlength="1000" required>{{ item.description }}</textarea>
-        </p>
+      <div class="content">
+        <h2>Edit item</h2>
+        <form action="/update_item" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <p>
+            <label for="title">Title:</label><br />
+            <input type="text" id="title" name="title" value="{{ item.title }}" maxlength="50" required />
+          </p>
+          <p>
+            <label for="description">Description:</label><br />
+            <textarea id="description" rows="8" cols="60" name="description" maxlength="1000" required>{{ item.description }}</textarea>
+          </p>
           <input type="hidden" name="item_id" value="{{ item.id }}" />
-        <p>
-          <label for="quantity">Quantity:</label><br />
-          <input type="number" id="quantity" name="quantity" value="{{ item.quantity }}" min="1" required />
-        </p>
-        {% if item.image_filename %}
-        <p>
-          Current image:<br />
-          <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="100" /><br />
-          <label>
-            <input type="checkbox" name="remove_image" value="1" /> Remove current image
-          </label>
-        </p>
-        {% endif %}
-        <p>
-          <label for="new_image">Change image:</label><br />
-          <input type="file" id="new_image" name="new_image" accept="image/*" />
-        </p>
-        {% for class in all_classes %}
-        <p>
-          <label for="class_{{ loop.index }}">{{ class }}:</label><br />
-          <select id="class_{{ loop.index }}" name="classes">
-            {% for option in all_classes[class] %}
-              <option value="{{ class }}:{{ option }}"
-                {% if class in classes and classes[class] == option %}selected{% endif %}>
-                {{ option }}
-              </option>
-            {% endfor %}
-          </select>
-        </p>
-        {% endfor %}
-        <input type="submit" value="Update" />
-        <p>
-          <a href="/item/{{ item.id }}">Back</a>
-        </p>
-      </form>
-    </div>
+          <p>
+            <label for="quantity">Quantity:</label><br />
+            <input type="number" id="quantity" name="quantity" value="{{ item.quantity }}" min="1" required />
+          </p>
+          <p>
+            <label for="price">Price:</label><br />
+            <input type="number" id="price" name="price" value="{{ item.price }}" min="1" max="99999" required />
+          </p>
+          {% if item.image %}
+            <p>
+              Current image:<br />
+              <div class="product-image">
+                <a href="{{ url_for('item_image', item_id=item.id) }}" target="_blank">
+                  <img src="{{ url_for('item_image', item_id=item.id) }}" alt="{{ item.title }}" width="100">
+                </a>
+              </div><br />
+              <label for="remove_image">Remove image:</label>
+              <input type="checkbox" id="remove_image" name="remove_image">
+            </p>
+          {% else %}
+            <p>No image available.</p>
+          {% endif %}
+          <p>
+            <label for="new_image">Change image:</label><br />
+            <input type="file" id="new_image" name="new_image" accept="image/*" />
+          </p>
+          {% for class in all_classes %}
+            <p>
+              <label for="class_{{ loop.index }}">{{ class }}:</label><br />
+              <select id="class_{{ loop.index }}" name="classes">
+                {% for option in all_classes[class] %}
+                  <option value="{{ class }}:{{ option }}"
+                    {% if class in classes and classes[class] == option %}selected{% endif %}>
+                    {{ option }}
+                  </option>
+                {% endfor %}
+              </select>
+            </p>
+          {% endfor %}
+        <div class="buttons-row">
+          <input type="submit" value="Update" />
+          <p>
+            <a href="/item/{{ item.id }}">Back</a>
+          </p>
+        </div>
+        </form>
+      </div>
     {% endif %}
   </body>
 </html>

@@ -29,7 +29,7 @@ Ominaisuudet:
 * Käyttäjä pystyy etsimään ilmoituksia hakusanalla tai muulla perusteella.
 * Estetty pääsy muokkaamaan tai poistamaan toisen käyttäjän ilmoituksia, eli lisätty oikeuksien tarkitukset.
 
-Feature list 14.4
+Feature list 16.4
 * Käyttäjä pystyy luomaan tunnuksen ja kirjautumaan sisään sovellukseen.
 * Vain kirjautunut käyttäjä pystyy katselemaan ilmoituksia ja pääsemään kauppaan sisälle.
 * Käyttäjä pystyy lisäämään, muokkaamaan ja poistamaan omia ilmoituksia.
@@ -54,12 +54,23 @@ message_count = 100000
 purchase_count = 100000
 * Lisätty indeksointi items tauluun
 * Lisätty tauluihin validointeja
-* Lisätty yksinkertainen CSS
+* Lisätty melkein valmis CSS
+* Lisätty label kentät
+* Poistettu ulkopuoliset kirjastot
+* Poistettu CAPTCHA
+* Vaihdettu myös tuotteiden kuvat käyttämään tietokantaa (BLOB)
+* Tuotteille lisätty kommentointi ja arvostelu
+* (Tuotteilla on myös valittavana kaksi eri kategoriaa)
+* Merkkijonoissa käytetty "
+* Käyttökokemukseen kiinnitetty huomiota, mutta tarkoitus on kuitenkin, että kauppaan pitää kirjautua ennen kuin
+tuotteita pääsee katsomaan
+* Virheilmoitukset päivitetty
+* Pitkät viestit laitettu rivittymään
+
+
 
 TODO:
-- label kentät
-- Useampien kuvien lisäys.
-- parempi kuvien validointi
+- seed.py toimimaan
 - näyttää että tuotetta ei saatavilla jos varastosaldo mennyt nollaan.
 - Checkout (selvitä palveluntarjoajien API:t).
 - Profiilin sivu jonne käyttäjä syöttää tietonsa

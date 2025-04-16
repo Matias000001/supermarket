@@ -21,7 +21,6 @@
     <div class="header">
       <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
     </div>
-
     <div class="nav">
       <nav>
         <ul>
@@ -35,19 +34,25 @@
         </ul>
       </nav>
     </div>
-
     <h2>Messages</h2>
     {% if not conversations %}
       <p>No messages</p>
     {% else %}
       {% for conversation in conversations %}
         <div class="conversation">
-        <h3>Messages with user {{ conversation.partner_name }}:</h3>
+        <h3>Messages with user
+          <a href="/user/{{ conversation.partner_id }}" class="user-link">
+          {{ conversation.partner_name }}
+          </a>:
+        </h3>
           <div class="messages">
             {% for msg in conversation.messages %}
               <div class="message {% if msg.sender_id == session.id %}sent{% else %}received{% endif %}">
                 <div class="message-header">
-              {% if msg.sender_id == session.id %}You{% else %}{{ conversation.partner_name }}{% endif %}
+              {% if msg.sender_id == session.id %}
+                <strong>You</strong>
+              {% else %}
+                <strong>{{ conversation.partner_name }}</strong>{% endif %}
               ({{ msg.sent_at }}):
                 </div>
                 <div class="message-content">
@@ -56,19 +61,20 @@
               </div>
             {% endfor %}
           </div>
-          <p></p>
           <form action="/send_message/{{ conversation.partner_id }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
             <label for="content">Message</label>:<br />
             <textarea name="content" placeholder="Write a message to {{ conversation.partner_name }}" required></textarea><br>
+            <div class="button-row">
             <button type="submit">Send</button>
           </form>
           <form action="/delete_conversation/{{ conversation.partner_id }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" style="background-color: #ffcccc;" onclick="return confirm('Are you sure you want to delete this conversation?')">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <button type="submit" style="background-color: #ffcccc;">
               Delete conversation
             </button>
           </form>
+        </div>
         </div>
       {% endfor %}
     {% endif %}

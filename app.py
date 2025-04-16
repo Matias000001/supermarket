@@ -3,6 +3,7 @@
 import os
 import re
 import random
+import secrets
 import time
 import sqlite3
 import math
@@ -18,10 +19,8 @@ from flask import render_template
 from flask import request
 from flask import session
 from flask import url_for
-from cryptography.fernet import Fernet
 from werkzeug.utils import secure_filename
-from flask_wtf.csrf import CSRFProtect
-from flask_limiter import Limiter
+
 
 import config
 import items
@@ -38,37 +37,20 @@ app.secret_key = config.SECRET_KEY
 # Encryption key setup
 with open("keyfile.key", "rb") as key_file:
     key = key_file.read()
-fernet = Fernet(key)
 
 
 # Logging
 logging.basicConfig(level=logging.INFO)
 
 
-# CSRF protection
-csrf = CSRFProtect(app)
-
-
-# Rate limiting setup
-limiter = Limiter(
-    app=app,
-    key_func=lambda: session.get("user_id") or request.headers.get("X-Unique-ID"),
-    default_limits=["20000000 per day", "50000000 per hour"]
-)
-
-
 # CSRF validation helper
-def validate_csrf():
-    """Validates that the CSRF token in the session matches the one in the request."""
-    if "csrf_token" not in session or "csrf_token" not in request.form:
-        return False
-    return session["csrf_token"] == request.form["csrf_token"]
+def check_csrf():
+    if request.form.get("csrf_token") != session.get("csrf_token"):
+        abort(403)
 
 
 # Upload configuration
 UPLOAD_FOLDER = "static/uploads"
-MAX_FILE_SIZE = 1 * 1024 * 1024
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -88,23 +70,10 @@ if not os.path.exists(app.config["UPLOAD_FOLDER"]):
     os.makedirs(app.config["UPLOAD_FOLDER"])
 
 
-def generate_captcha():
-    """Generates a CAPTCHA question and stores the answer in the session."""
-    a = random.randint(1, 10)
-    b = random.randint(1, 10)
-    session["captcha_answer"] = str(a + b)
-    return f"{a} + {b}"
-
-
 def require_login():
     """Ensures the user is logged in, aborts with a 403 if not."""
     if "username" not in session:
         abort(403)
-
-
-def allowed_file(filename):
-    """Checks if the file has an allowed extension."""
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.before_request
@@ -117,7 +86,7 @@ def before_request():
 @app.after_request
 def after_request(response):
     """Logs elapsed time after processing the request."""
-    start_time = getattr(g, 'start_time', None)
+    start_time = getattr(g, "start_time", None)
     if start_time is not None:
         elapsed_time = round(time.time() - start_time, 2)
         print("elapsed time:", elapsed_time, "s")
@@ -128,15 +97,16 @@ def after_request(response):
 def add_image():
     """Handles image upload for the logged-in user."""
     require_login()
+    check_csrf()
     user_id = session["id"]
-    if 'image' not in request.files:
+    if "image" not in request.files:
         flash("No file selected", "error")
         return redirect("/user/" + str(user_id))
     file = request.files["image"]
-    if file.filename == '':
+    if file.filename == "":
         flash("No selected file", "error")
         return redirect("/user/" + str(user_id))
-    if file and allowed_file(file.filename):
+    if file and file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
         try:
             image = file.read()
             if len(image) > 100 * 1024:
@@ -155,7 +125,7 @@ def add_image():
 
 @app.route("/user_image/<int:user_id>")
 def user_image(user_id):
-    """Serves the user's image."""
+    """Serves the user"s image."""
     image = users.get_image(user_id)
     if not image:
         abort(404)
@@ -164,55 +134,24 @@ def user_image(user_id):
     return response
 
 
-@app.route("/verify_captcha", methods=["POST"])
-def verify_captcha():
-    """Verifies the CAPTCHA answer."""
-    if "captcha_answer" not in session:
-        flash("CAPTCHA session expired", "error")
-        return redirect(url_for("index"))
-    user_answer = request.form.get("captcha_answer", "").strip()
-    if user_answer == session["captcha_answer"]:
-        session["captcha_passed"] = True
-        session.pop("captcha_answer", None)
-        flash("Verification successful!", "success")
-    else:
-        flash("Wrong answer, try again", "error")
-    return redirect(url_for("index"))
-
-
-@app.before_request
-def require_captcha():
-    """Ensures the user has solved the CAPTCHA before login or registration."""
-    if request.path in ["/login", "/register"] and not session.get("captcha_passed"):
-        abort(403, "Solve CAPTCHA first.")
-
-
 @app.route("/")
 @app.route("/<int:page>")
 def index(page=1):
-    """Renders the homepage with items, pagination, and CAPTCHA checks."""
-    if "username" in session:
-        session.pop("captcha_passed", None)
-        session.pop("captcha_passed", None)
-        page_size = 10
-        item_count = items.items_count()
-        page_count = max(math.ceil(item_count / page_size), 1)
-        if page < 1:
-            return redirect("/1")
-        if page > page_count:
-            return redirect(f"/{page_count}")
-        current_items = items.get_items(page, page_size)
-        return render_template("index.html", page=page, page_count=page_count, items=current_items)
-    if not session.get("captcha_passed"):
-        captcha_question = generate_captcha()
-        print("CAPTCHA not passed")
-        return render_template("index.html", captcha_question=captcha_question)
-    return render_template("index.html")
+    """Renders the homepage with items and pagination."""
+    page_size = 10
+    item_count = items.items_count()
+    page_count = max(math.ceil(item_count / page_size), 1)
+    if page < 1:
+        return redirect("/1")
+    if page > page_count:
+        return redirect(f"/{page_count}")
+    current_items = items.get_items(page, page_size)
+    return render_template("index.html", page=page, page_count=page_count, items=current_items)
 
 
 @app.route("/user/<int:user_id>")
 def show_user(user_id):
-    """Displays a user's profile with their posted items."""
+    """Displays a user"s profile with their posted items."""
     user = users.get_user(user_id)
     if not user:
         abort(404)
@@ -220,19 +159,46 @@ def show_user(user_id):
     if not user_items:
         user_items = []
     image = users.get_image(user_id)
-    return render_template("show_user.html", user=user, items=user_items, image=image)
+    classes = []
+    for i in user_items:
+        item_classes = items.get_classes(i["id"])
+        if item_classes:
+            classes.append(item_classes)
+    return render_template("show_user.html", user=user, items=user_items, image=image, classes=classes)
+
+
+@app.route("/item_image/<int:item_id>")
+def item_image(item_id):
+    """Serves an item's image."""
+    image = items.get_image(item_id)
+    if not image:
+        abort(404)
+    response = make_response(bytes(image))
+    response.headers.set("Content-Type", "image/jpeg")
+    return response
 
 
 @app.route("/find_item")
 def find_item():
     """Allows the user to search for items based on a query."""
-    query = request.args.get("query")
+    query = request.args.get("query", "")
+    page = int(request.args.get("page", 1))
+    results_per_page = 10
+    items_found = []
+    items_classes = {}
     if query:
-        items_found = items.find_items(query)
+        items_found = items.find_items(query, page, results_per_page)
+        total_results = items.get_total_count(query)
+        page_count = (total_results + results_per_page - 1) // results_per_page
+        for item in items_found:
+            item_id = item["id"]
+            item_classes = items.get_classes(item_id)
+            items_classes[item_id] = item_classes
     else:
         query = ""
-        items_found = []
-    return render_template("find_item.html", query=query, results=items_found)
+        page_count = 0
+    return render_template("find_item.html", query=query, results=items_found,
+                           items_classes=items_classes, page=page, page_count=page_count)
 
 
 @app.route("/new_item")
@@ -245,7 +211,7 @@ def new_item():
 
 @app.route("/remove_item/<int:item_id>", methods=["GET", "POST"])
 def remove_item(item_id):
-    """Removes an item from the user's own inventory."""
+    """Removes an item from the user"s own inventory."""
     require_login()
     item = items.get_item(item_id)
     if not item:
@@ -262,8 +228,8 @@ def remove_item(item_id):
 
 @app.route("/update_item", methods=["POST"])
 def update_item():
-    """Updates the details of an existing item in the user's inventory."""
     require_login()
+    check_csrf()
     item_id = request.form["item_id"]
     item = dict(items.get_item(item_id))
     if not item or item["user_id"] != session["id"]:
@@ -271,11 +237,26 @@ def update_item():
     title = request.form["title"]
     description = request.form["description"]
     quantity = request.form["quantity"]
-    if not is_valid_item(title, description, quantity):
-        abort(403)
+    price = request.form["price"]
+    try:
+        validate_form_data({
+            "title": title,
+            "description": description,
+            "price": price,
+            "quantity": quantity
+        })
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(f"/edit_item/{item_id}")
     classes = parse_classes_all(request.form.getlist("classes"), items.get_all_classes())
-    image_filename = handle_image_upload(item["image_filename"], request.files, request.form)
-    items.update_item(item_id, title, description, classes, quantity, image_filename)
+    image_data = None
+    remove_image = "remove_image" in request.form
+    new_image_file = request.files.get("new_image")
+    if new_image_file and new_image_file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
+        image_data = new_image_file.read()
+    elif remove_image:
+        image_data = b""
+    items.update_item(item_id, title, description, classes, price, quantity, image_data)
     flash("Item updated successfully.", "success")
     return redirect(f"/item/{item_id}")
 
@@ -305,26 +286,17 @@ def parse_classes_all(class_entries, all_classes):
     return result
 
 
-def handle_image_upload(existing_filename, files, form):
-    """Handles image upload for an item, including replacing or removing an existing image."""
-    new_image = files.get("new_image")
-    filename = existing_filename
-    if new_image and allowed_file(new_image.filename):
-        if existing_filename:
-            try:
-                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], existing_filename))
-            except FileNotFoundError:
-                pass
-        filename = secure_filename(new_image.filename)
-        new_image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+def handle_image_upload_blob(files, form):
+    """Handles image upload for an item as a BLOB. Returns image bytes or None."""
+    image_file = files.get("new_image")
+    if image_file and image_file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
+        image = image_file.read()
+        if len(image) > 100 * 1024:
+            raise ValueError("Image too large (max 100KB)")
+        return image
     elif "remove_image" in form:
-        if existing_filename:
-            try:
-                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], existing_filename))
-            except FileNotFoundError:
-                pass
-        filename = None
-    return filename
+        return None
+    return None
 
 
 @app.route("/edit_item/<int:item_id>")
@@ -345,34 +317,66 @@ def edit_item(item_id):
     return render_template("edit_item.html", item=item, classes=classes, all_classes=all_classes)
 
 
-@app.route("/item/<int:item_id>")
+@app.route("/item/<int:item_id>", methods=["GET", "POST"])
 def show_item(item_id):
-    """Displays an item's details along with its associated classes."""
+    """Displays an item's details along with its associated classes and comments."""
     require_login()
     item = items.get_item(item_id)
     if not item:
         abort(404)
     classes = items.get_classes(item_id)
-    return render_template("show_item.html", item=item, classes=classes)
+    comments = items.get_comments(item_id)
+    average_rating = items.get_average_rating(item_id)
+    if request.method == "POST":
+        if "content" in request.form and "rating" in request.form:
+            content = request.form["content"]
+            rating = int(request.form["rating"])
+            user_id = session["id"]
+            if user_id:
+                try:
+                    items.add_comment(item_id, user_id, content, rating)
+                    flash("Comment added successfully!", "success")
+                except ValueError:
+                    flash("Rating must be between 1 and 5.", "danger")
+            else:
+                flash("You must be logged in to add a comment.", "danger")
+            return redirect(url_for("show_item", item_id=item_id))
+    return render_template("show_item.html", item=item, classes=classes, comments=comments, average_rating=average_rating)
+
+
+@app.route("/add_comment", methods=["POST"])
+def add_comment_route():
+    item_id = request.form["item_id"]
+    user_id = session["id"]
+    content = request.form["content"]
+    rating = request.form["rating"]
+    items.add_comment(item_id, user_id, content, rating)
+    return redirect(f"/item/{item_id}")
 
 
 @app.route("/create_item", methods=["POST"])
 def create_item():
     """Creates a new item and adds it to the inventory."""
     require_login()
+    check_csrf()
     try:
         form_data = extract_form_data(request)
         validate_form_data(form_data)
-        image_filename = new_image_upload(request.files.get("image"))
+        user_id = session["id"]
+        image_data = None
+        image_file = request.files.get("image")
+        if image_file:
+            if image_file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
+                image_data = image_file.read()
         classes = parse_classes(request.form.getlist("classes"))
         items.add_item(
             title=form_data["title"],
             description=form_data["description"],
             price=int(form_data["price"]),
             quantity=int(form_data["quantity"]),
-            user_id=session["id"],
+            user_id=user_id,
             classes=classes,
-            image_filename=image_filename
+            image=image_data
         )
         flash("Product added successfully!", "success")
         return redirect(url_for("index"))
@@ -383,11 +387,6 @@ def create_item():
         app.logger.error("File handling error: %s", e)
         abort(500, "File saving failed")
     except RuntimeError as e:
-        if 'image_filename' in locals() and image_filename:
-            try:
-                os.remove(os.path.join(UPLOAD_FOLDER, image_filename))
-            except OSError:
-                pass
         app.logger.error("Product addition failed: %s", e)
         abort(500, "Product addition failed")
 
@@ -411,17 +410,17 @@ def validate_form_data(data):
         raise ValueError("Title must be 1-50 characters long")
     if not 0 < len(data["description"]) <= 1000:
         raise ValueError("Description must be 1-1000 characters.")
-    if not re.fullmatch(r"^[1-9][0-9]{0,3}$", data["price"]):
-        raise ValueError("Invalid price (1-9999)")
-    if not data["quantity"].isdigit() or not 1 <= int(data["quantity"]) <= 999:
-        raise ValueError("Invalid quantity (1-999)")
+    if not re.fullmatch(r"^[1-9][0-9]{0,4}$", data["price"]):
+        raise ValueError("Invalid price (1-99999)")
+    if not data["quantity"].isdigit() or not 1 <= int(data["quantity"]) <= 9999:
+        raise ValueError("Invalid quantity (1-9999)")
 
 
 def new_image_upload(file):
-    """Handles the upload of a new image for an item, ensuring it's valid and saved."""
+    """Handles the upload of a new image for an item, ensuring it"s valid and saved."""
     if not file or not file.filename:
         return None
-    if not allowed_file(file.filename):
+    if not file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
         raise ValueError("Allowed formats: .jpg, .jpeg, .png, .webp")
     file.seek(0, os.SEEK_END)
     if file.tell() > 2 * 1024 * 1024:
@@ -464,6 +463,7 @@ def login():
         if user_id:
             session["username"] = username
             session["id"] = user_id
+            session["csrf_token"] = secrets.token_hex(16)
             session.permanent = True
             session.modified = True
             flash("Login successful!", "success")
@@ -479,6 +479,7 @@ def logout():
     if "username" in session:
         del session["id"]
         del session["username"]
+        del session["csrf_token"]
     if "username" in session:
         session.clear()
     return redirect("/")
@@ -503,7 +504,7 @@ def register():
         try:
             users.create_user(username, password1)
             flash("Registration successful! Please login.", "success")
-            return redirect(url_for('login'))
+            return redirect(url_for("login"))
         except sqlite3.IntegrityError:
             flash("Username already taken", "error")
             return render_template("register.html", filled={"username": username})
@@ -515,7 +516,7 @@ def register():
 
 @app.route("/messages")
 def show_messages():
-    """Displays the user's conversations. Redirects to login page if user is not
+    """Displays the user"s conversations. Redirects to login page if user is not
        logged in."""
     if "id" not in session:
         return redirect("/login")
@@ -558,6 +559,7 @@ def create_purchase():
     """Creates a purchase for an item, adds it to the cart, and validates quantity
        and item existence."""
     require_login()
+    check_csrf()
     item_id = request.form["item_id"]
     if not re.match("^[0-9]+$", item_id):
         abort(403)
@@ -577,8 +579,9 @@ def create_purchase():
 
 @app.route("/update_basket", methods=["POST"])
 def update_basket():
-    """Updates item quantities in the cart and ensures they don't exceed available
+    """Updates item quantities in the cart and ensures they don"t exceed available
        stock."""
+    check_csrf()
     if "id" not in session:
         return redirect("/login")
     purchases = basket.get_cart(session["id"])
@@ -586,7 +589,7 @@ def update_basket():
     quantities = basket.get_quantities(product_ids)
     quantities_dict = {item["id"]: item["quantity"] for item in quantities}
     for purchase in purchases:
-        quantity = request.form.get(f"quantity_{purchase['purchase_id']}")
+        quantity = request.form.get(f"quantity_{purchase["purchase_id"]}")
         if quantity:
             quantity = int(quantity)
             max_quantity = quantities_dict.get(purchase["item_id"])
@@ -600,6 +603,7 @@ def remove_from_basket(purchase_id):
     """Removes an item from the cart; redirects to login if not logged in."""
     if "id" not in session:
         return redirect("/login")
+    check_csrf()
     basket.remove_item(purchase_id, session["id"])
     return redirect("/basket")
 
@@ -610,6 +614,7 @@ def checkout():
        if not logged in."""
     if "id" not in session:
         return redirect("/login")
+    check_csrf()
     basket.checkout(session["id"])
     return redirect("/")
 

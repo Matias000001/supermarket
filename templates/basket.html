@@ -21,7 +21,6 @@
     <div class="header">
       <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
     </div>
-
     <div class="nav">
       <nav>
         <ul>
@@ -35,27 +34,34 @@
         </ul>
       </nav>
     </div>
-
     <h2>Shopping Basket</h2>
     {% if purchases %}
     <form action="/update_basket" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <ul>
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <ul class="basket-list">
           {% for purchase in purchases %}
-          <li>
+          <li class="basket-item">
+            <div class="basket-details">
               <strong>{{ purchase["title"] }}</strong>
-              <label for="quantity_{{ purchase['purchase_id'] }}">Quantity:</label>
-              <input type="number"
-                     name="quantity_{{ purchase['purchase_id'] }}"
-                     value="{{ purchase['quantity'] }}"
-                     min="1"
-                     max="{{ quantities[purchase['item_id']] }}"
-                     style="width: 50px;">
-              <span aria-label="Price per item: {{ purchase['price_at_purchase'] }} euros. Total: {{ purchase['total_price'] }} euros.">
-                {{ purchase["quantity"] }} pcs - {{ purchase["price_at_purchase"] }} € each - Total: {{ purchase["total_price"] }} €
-              </span>
-              <button type="submit" formaction="/remove_from_basket/{{ purchase['purchase_id'] }}"
-                      formmethod="POST">Remove</button>
+              <div class="basket-info">
+                <label for="quantity_{{ purchase['purchase_id'] }}">Quantity:</label>
+                <input type="number"
+                       name="quantity_{{ purchase['purchase_id'] }}"
+                       value="{{ purchase['quantity'] }}"
+                       min="1"
+                       max="{{ quantities[purchase['item_id']] }}"
+                       style="width: 50px;">
+                <span aria-label="Price per item: {{ purchase['price_at_purchase'] }} euros. Total: {{ purchase['total_price'] }} euros.">
+                  {{ purchase["quantity"] }} pcs - {{ purchase["price_at_purchase"] }} € each - Total: {{ purchase["total_price"] }} €
+                </span>
+              </div>
+            </div>
+            <button class="remove-button"
+                    type="submit"
+                    formaction="/remove_from_basket/{{ purchase['purchase_id'] }}"
+                    formmethod="POST">
+              Remove
+            </button>
           </li>
           {% endfor %}
         </ul>

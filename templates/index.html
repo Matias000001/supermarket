@@ -21,7 +21,6 @@
       <div class="header">
         <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
       </div>
-
       <div class="nav">
         <nav>
           <ul>
@@ -35,26 +34,28 @@
           </ul>
         </nav>
       </div>
-
       <div class="content">
-      <h2>Products for sale</h2>
-        <ul>
+        <h2>Products for sale</h2>
+        <ul class="item-list">
           {% for item in items %}
-            <div class="item_index">
-              <p>
-                <a href="/item/{{ item.id }}">{{ item.title }}</a>
-              </p>
-              <p>
-                Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a>
-              </p>
-              {% if item.image_filename %}
-                <p>
-                  <a href="{{ url_for('static', filename='uploads/' + item.image_filename) }}" target="_blank">
-                    <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" width="150">
-                  </a>
-                </p>
+            <li class="item_index">
+              <div class="item_content">
+                <div>
+                  <p><a href="/item/{{ item.id }}">{{ item.title }}</a></p>
+                  <p class="seller">Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></p>
+                </div>
+                <div class="item_meta">
+                  <p class="price">Price: {{ item.price }} €</p>
+                </div>
+              </div>
+              {% if item.image %}
+              <div class="item_image_wrapper">
+                <a href="{{ url_for('item_image', item_id=item.id) }}" target="_blank">
+                  <img src="{{ url_for('item_image', item_id=item.id) }}" alt="{{ item.title }}">
+                </a>
+              </div>
               {% endif %}
-            </div>
+            </li>
           {% endfor %}
         </ul>
         {% if page is defined and page_count is defined %}
@@ -63,43 +64,20 @@
           <a href="/{{ page + 1 }}">&gt;&gt;</a>
         {% endif %}
         <hr />
-    </div>
-    {% elif not session.captcha_passed %}
-      <div class="header">
-        <h2>SUPERMARKET</h2>
       </div>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-          {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-      <div class="captcha-box">
-        <h3>Are you a robot?</h3>
-        <form action="/verify_captcha" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <p>Solve: <strong>{{ captcha_question }} = ?</strong></p>
-          <input type="text" name="captcha_answer" required>
-          <button type="submit">Continue</button>
-        </form>
-      </div>
-      <hr />
     {% else %}
       <div class="header">
         <h2>SUPERMARKET</h2>
       </div>
       {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-          {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+        {% if messages %}
+          <ul>
+            {% for category, message in messages %}
+              <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
       <p>
         <a href="/login">LOGIN</a>
         <a href="/register">REGISTER</a>

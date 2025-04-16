@@ -8,16 +8,6 @@
   </head>
   <body>
     {% if session.username %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-          {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-          {% endfor %}
-          {% set _ = get_flashed_messages() %}
-        </ul>
-      {% endif %}
-    {% endwith %}
     <div class="header">
       <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
     </div>
@@ -36,32 +26,7 @@
       </nav>
     </div>
     {% endif %}
-
     <h3>{{ user.username }}'s Profile</h3>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <ul>
-        {% for category, message in messages %}
-          <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-        {% set _ = get_flashed_messages() %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-
-    {% if session.username and session.get('id') != user.id %}
-      <section class="send_msg">
-        <p>Send message to {{ user.username }}</p>
-        <form method="post" action="/send_message/{{ user.id }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <label for="message-content"></label>
-          <textarea name="content" id="message-content" required placeholder="Write your message..."></textarea><br>
-          <button type="submit">Send Message</button>
-        </form>
-      </section>
-    {% endif %}
-
     {% if image %}
       <div class="profile_pic">
         <img src="{{ url_for('user_image', user_id=user.id) }}" alt="profile picture" width="200" height="200" />
@@ -69,34 +34,64 @@
     {% else %}
       <p>No profile picture</p>
     {% endif %}
-
-    <form action="/add_image" method="post" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <p>
-        <label for="profile-image">Profile picture:</label>
-        <input type="file" name="image" id="profile-image" accept=".jpg, .jpeg, .png" />
-      </p>
-      <input type="submit" value="Upload" />
-    </form>
-
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+          {% set _ = get_flashed_messages() %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% if session.username and session.get('id') != user.id %}
+      <section class="send_msg">
+        <p>Send message to {{ user.username }}</p>
+        <form method="post" action="/send_message/{{ user.id }}">
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <label for="message-content"></label>
+          <textarea name="content" id="message-content" required placeholder="Write your message..."></textarea><br>
+          <button type="submit">Send Message</button>
+        </form>
+      </section>
+    {% endif %}
+    {% if session.get('id') == user.id %}
+      <form action="/add_image" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <p>
+          <label for="profile-image">Profile picture:</label>
+          <input type="file" name="image" id="profile-image" accept=".jpg, .jpeg, .png" />
+        </p>
+        <input type="submit" value="Upload" />
+      </form>
+    {% endif %}
     <h3>Products for sale ({{ items | count }})</h3>
-    <ul class="content">
+    <ul class="content product-grid">
       {% for item in items %}
-        <li class="item_index">
+        <li class="item_index product-item">
           <a class="product-link" href="/item/{{ item.id }}">{{ item.title }}</a>
-          {% if item.image_filename %}
-            <div class="product-image">
-              <a href="{{ url_for('static', filename='uploads/' + item.image_filename) }}" target="_blank">
-                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" 
-                     alt="{{ item.title }}" 
-                     width="100">
-              </a>
+      {% if item.image %}
+        <div class="product-image">
+          <a href="{{ url_for('item_image', item_id=item.id) }}" target="_blank">
+          <img src="{{ url_for('item_image', item_id=item.id) }}"
+               alt="{{ item.title }}"
+               width="100">
+            </a>
             </div>
-          {% endif %}
-        </li>
-      {% else %}
-        <li>No products</li>
-      {% endfor %}
-    </ul>
+            {% endif %}
+            <div class="product-price">Price: {{ item.price }} €</div>
+            {% set item_classes = classes[loop.index0] %}
+            {% if item_classes %}
+              <div class="item-classes">
+            {% for class in item_classes %}
+              <div class="item-class">{{ class["title"] }}: {{ class["value"] }}</div>
+            {% endfor %}
+              </div>
+            {% else %}
+              <div class="no-categories">No categories</div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
   </body>
 </html>

@@ -21,7 +21,6 @@
     <div class="header">
       <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
     </div>
-
     <div class="nav">
       <nav>
         <ul>
@@ -35,22 +34,50 @@
         </ul>
       </nav>
     </div>
-
     <h2>Find item</h2>
-    <form action="/find_item" method="GET">
-      <p>
-        <label for="query">Search for:</label>
-        <input type="text" id="query" name="query" value="{{ query }}" />
-      </p>
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="submit" value="search" />
+    <form action="/find_item" method="GET" class="find-form">
+      <label for="query">Search for:</label><br>
+      <input type="text" id="query" name="query" value="{{ query }}" class="find-input">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <input type="submit" value="Search" class="find-submit">
     </form>
     {% if query %}
     <h3>Results</h3>
-    <ul>
+    <ul class="find-results">
       {% for item in results %}
-      <li><a href="/item/{{ item.id }}">{{ item.title }}</a></li>
+        <li class="find-result-item">
+          <a href="/item/{{ item.id }}">
+            <div class="result-title">{{ item.title }}</div>
+            <div class="item-price">Price: € {{ item.price }}</div>
+            {% if item.image %}
+              <div class="item-image">
+                <img src="{{ url_for('item_image', item_id=item.id) }}" alt="{{ item.title }}" class="item-image">
+              </div>
+              {% else %}
+                <div class="item-image">
+                  <p>No image available.</p>
+                </div>
+              {% endif %}
+              {% if item.id in items_classes %}
+                {% for class in items_classes[item.id] %}
+                <div class="item-class">{{ class["title"] }}: {{ class["value"] }}</div>
+                {% endfor %}
+              {% else %}
+              <div>No categories</div>
+            {% endif %}
+          </a>
+        </li>
       {% endfor %}
+    </ul>
+    {% if page is defined and page_count is defined %}
+      {% if page > 1 %}
+        <a href="/find_item?query={{ query }}&page={{ page - 1 }}">&lt;&lt; Previous</a>
+      {% endif %}
+        Page {{ page }} / {{ page_count }}
+        {% if page < page_count %}
+          <a href="/find_item?query={{ query }}&page={{ page + 1 }}">Next &gt;&gt;</a>
+        {% endif %}
+      {% endif %}
     {% endif %}
     {% endif %}
   </body>

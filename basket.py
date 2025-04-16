@@ -38,6 +38,6 @@ def get_quantities(product_ids):
     """Fetches inventory quantities for given product IDs."""
     if not product_ids:
         return []
-    result = ','.join(['?'] * len(product_ids))
+    result = ",".join(["?"] * len(product_ids))
     sql = f"SELECT id, quantity FROM items WHERE id IN ({result})"
     return db.query(sql, product_ids)

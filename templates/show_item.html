@@ -19,9 +19,8 @@
       {% endif %}
     {% endwith %}
     <div class="header">
-      <h2>SUPERMARKET</h2>
+      <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
     </div>
-
     <div class="nav">
       <nav>
         <ul>
@@ -36,52 +35,74 @@
       </nav>
     </div>
     <h3>{{ item.title }}</h3>
-      {% if item['image_filename'] %}
-    <br>
-    <a href="{{ url_for('static', filename='uploads/' + item['image_filename']) }}" target="_blank">
-      <img src="{{ url_for('static', filename='uploads/' + item['image_filename']) }}" alt="{{ item.title }}" width="100">
-    </a>
-    {% endif %}
-    <p>{{ item.description | replace('\n', '<br>') | safe }}</p>
-    <p>Price: {{ item.price | e }} €</p>
-    <p>Available: {{ item.quantity }} pcs</p>
-    <p>Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></p>
-    {% if classes %}
-      <p>
-        Classes:
-          <ul>
-            {% for class in classes %}
-              <li>{{ class.title }}: {{ class.value }}</li>
-            {% endfor %}
-         </ul>
-      </p>
-    {% endif %}
-    {% if session.get("id") != item.user_id %}
-      {% if item.quantity > 0 %}
-      <form action="/create_purchase" method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        Pcs:
-        <select name="quantity" required>
-          <option value="" disabled selected>Select quantity</option>
-          {% for i in range(1, item.quantity + 1) %}
-            <option value="{{ i }}">{{ i }}</option>
+    <div id="show-item-page">
+      <div id="item-index">
+        <div id="item-image-wrapper">
+          {% if item.image %}
+            <img src="{{ url_for('item_image', item_id=item.id) }}" alt="{{ item.title }}" />
+          {% else %}
+            <p>No image available.</p>
+          {% endif %}
+        </div>
+        <div id="item-content">
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.description | replace('\n', '<br>') | safe }}</p>
+          <p class="price">Price: {{ item.price | e }} €</p>
+          <p>Available: {{ item.quantity }} pcs</p>
+          <p class="seller">Seller: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></p>
+          {% if classes %}
+            <ul>
+              {% for class in classes %}
+                <li>{{ class.title }}: {{ class.value }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+          {% if session.get("id") != item.user_id %}
+            {% if item.quantity > 0 %}
+              <form action="/buy_item" method="post">
+                <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <label for="quantity">Quantity:</label>
+                <input type="number" name="quantity" min="1" max="{{ item.quantity }}" value="1" required>
+                <input type="submit" value="Buy">
+              </form>
+            {% else %}
+              <p>This product is currently out of stock.</p>
+            {% endif %}
+          {% else %}
+            <p>
+              <a href="/edit_item/{{ item.id }}">Edit</a>
+              <a href="/remove_item/{{ item.id }}">Delete</a>
+            </p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="comments-section">
+        {% if average_rating %}
+          <p><strong>Average rating:</strong> {{ average_rating }} / 5</p>
+        {% else %}
+          <p><strong>No ratings yet.</strong></p>
+        {% endif %}
+        <h3>Comments</h3>
+          {% for comment in comments %}
+            <div class="comment">
+              <strong>{{ comment.username or "Unknown user" }}</strong>
+              <span class="rating">({{ comment.created_at }})</span>
+              <p>{{ comment.content }}</p>
+              <p class="rating">{{ comment.rating }} / 5</p>
+            </div>
           {% endfor %}
-        </select>
-        <input type="hidden" name="item_id" value="{{ item.id }}"/>
-        <input type="hidden" name="price" value="{{ item.price }}"/>
-        <input type="hidden" name="seller_id" value="{{ item.user_id }}"/>
-        <input type="submit" value="Add to basket" />
-      </form>
-      {% else %}
-        <p>This product is currently out of stock.</p>
+        {% if session.get("id") %}
+          <form action="/item/{{ item.id }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <textarea name="content" rows="4" cols="50" required></textarea><br>
+            <label for="rating">Rating (1 to 5):</label>
+            <input type="number" name="rating" min="1" max="5" required><br>
+            <input type="submit" value="Add Comment">
+          </form>
+        {% endif %}
       {% endif %}
-    {% endif %}
-    {% if session.get("id") == item.user_id %}
-    <p>
-      <a href="/edit_item/{{ item.id }}">Edit</a>
-      <a href="/remove_item/{{ item.id }}">Delete</a>
-    </p>
-    {% endif %}
-    {% endif %}
+    </div>
   </body>
 </html>

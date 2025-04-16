@@ -20,10 +20,10 @@ db.execute("DELETE FROM messages")
 db.execute("DELETE FROM purchases")
 
 
-USER_COUNT = 100000
+USER_COUNT = 1000000
 ITEM_COUNT = 1000000
-MESSAGE_COUNT = 100000
-PURCHASE_COUNT = 100000
+MESSAGE_COUNT = 1000000
+PURCHASE_COUNT = 1000000
 
 
 def random_password_hash():
@@ -66,7 +66,7 @@ for i in range(1, PURCHASE_COUNT + 1):
     seller_id = random.randint(1, USER_COUNT)
     quantity = random.randint(1, 5)
     price = random.randint(10, 500)
-    status = random.choice(['pending', 'paid', 'shipped', 'delivered'])
+    status = random.choice(["pending", "paid", "shipped", "delivered"])
     db.execute("""INSERT INTO purchases (item_id, user_id, quantity,
                   price_at_purchase, seller_id, status)
                   VALUES (?, ?, ?, ?, ?, ?)""",

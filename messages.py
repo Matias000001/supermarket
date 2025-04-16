@@ -3,15 +3,8 @@ This module handles operations related to messaging between users,
 including retrieving conversations, sending messages, and deleting conversations.
 """
 
-from cryptography.fernet import Fernet, InvalidToken
 from flask import session
 import db
-
-
-# Initialize the Fernet key for encryption/decryption
-with open("keyfile.key", "rb") as key_file:
-    key = key_file.read()
-fernet = Fernet(key)
 
 
 def get_user_conversations(user_id):
@@ -51,13 +44,9 @@ def get_user_conversations(user_id):
                 "partner_name": msg["partner_name"],
                 "messages": []
             }
-        try:
-            decrypted_content = fernet.decrypt(msg["content"].encode()).decode()
-        except InvalidToken:
-            decrypted_content = "Encrypted message (decryption failed)"
         conversations[partner_id]["messages"].append({
             "id": msg["message_id"],
-            "content": decrypted_content,
+            "content": msg["content"],
             "sent_at": msg["sent_at"],
             "sender_id": msg["sender_id"]
         })
@@ -69,10 +58,8 @@ def send_message(recipient_id, content):
     if "id" not in session:
         raise PermissionError("User is not logged in")
     sender_id = session["id"]
-    encrypted_content = fernet.encrypt(content.encode()).decode()
     sql = "INSERT INTO messages (content, sender_id, recipient_id) VALUES (?, ?, ?)"
-    db.execute(sql, [encrypted_content, sender_id, recipient_id])
-    return True
+    db.execute(sql, [content, sender_id, recipient_id])
 
 
 def delete_conversation(partner_id):
@@ -84,7 +71,6 @@ def delete_conversation(partner_id):
              WHERE (sender_id = ? AND recipient_id = ?) 
              OR (sender_id = ? AND recipient_id = ?)"""
     db.execute(sql, [user_id, partner_id, partner_id, user_id])
-    return True
 
 
 def get_conversation_between_users(user1_id, user2_id):
@@ -99,13 +85,9 @@ def get_conversation_between_users(user1_id, user2_id):
     messages_data = db.query(sql, [user1_id, user2_id, user2_id, user1_id])
     conversation = []
     for msg in messages_data:
-        try:
-            decrypted_content = fernet.decrypt(msg["content"].encode()).decode()
-        except InvalidToken:
-            decrypted_content = "Encrypted message (decryption failed)"
         conversation.append({
             "id": msg["id"],
-            "content": decrypted_content,
+            "content": msg["content"],
             "sent_at": msg["sent_at"],
             "sender_id": msg["sender_id"],
             "sender_name": msg["sender_name"]
