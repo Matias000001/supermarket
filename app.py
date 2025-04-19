@@ -569,7 +569,7 @@ def create_purchase():
     price = request.form["price"]
     quantity = request.form["quantity"]
     seller_id = request.form["seller_id"]
-    if not re.match("^[1-5]$", quantity):
+    if not re.match("^[1-9][0-9]*$", quantity):
         abort(403)
     user_id = session["id"]
     items.add_purchase(item_id, user_id, seller_id, price, quantity)
