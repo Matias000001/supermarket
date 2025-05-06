@@ -700,3 +700,84 @@ ul.content .item-class {
     background-color: #f2f2f2;
     border-radius: 5px;
 }
+
+@media (max-width: 768px) {
+
+    body {
+      padding: 1em;
+      margin: 0;
+      max-width: 100%;
+    }
+  
+    nav li {
+      display: block;
+      padding: 0.5em 0;
+      border: none;
+      text-align: center;
+    }
+  
+    .item_index {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .item_image_wrapper {
+      width: 100%;
+      height: auto;
+    }
+  
+    .form-group {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .form-group input[type="number"],
+    .form-group input[type="submit"] {
+      width: 100%;
+    }
+  
+    .basket-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5em;
+    }
+  
+    .new-item-form {
+      padding: 1em 0.5em;
+    }
+  
+    .find-form {
+      max-width: 100%;
+      padding: 1em;
+    }
+  
+    .item-list {
+      grid-template-columns: 1fr !important;
+    }
+  
+    .comment {
+      padding: 0.5em 0;
+    }
+  
+    textarea[name="content"] {
+      width: 100% !important;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+      
+      .item-image,
+      .item_image_wrapper img,
+      .item_index img,
+      .profile_pic img,
+      .find-result-item img {
+        max-width: 100%;
+        max-width: 80vw;
+        height: auto;
+      }      
+
+  }
+  

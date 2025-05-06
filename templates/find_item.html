@@ -37,7 +37,7 @@
     <h2>Find item</h2>
     <form action="/find_item" method="GET" class="find-form">
       <label for="query">Search for:</label><br>
-      <input type="text" id="query" name="query" value="{{ query }}" class="find-input">
+      <input id="query" type="text" id="query" name="query" value="{{ query }}" class="find-input">
       <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
       <input type="submit" value="Search" class="find-submit">
     </form>
