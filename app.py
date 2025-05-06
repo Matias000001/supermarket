@@ -294,8 +294,6 @@ def handle_image_upload_blob(files, form):
         if len(image) > 100 * 1024:
             raise ValueError("Image too large (max 100KB)")
         return image
-    elif "remove_image" in form:
-        return None
     return None
 
 
