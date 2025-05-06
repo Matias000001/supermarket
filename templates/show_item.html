@@ -65,7 +65,7 @@
                 <input type="hidden" name="price" value="{{ item.price }}">
                 <input type="hidden" name="seller_id" value="{{ item.user_id }}">
                 <label for="quantity">Quantity:</label>
-                <input type="number" name="quantity" min="1" max="{{ item.quantity }}" value="1" required>
+                <input id="quantity" type="number" name="quantity" min="1" max="{{ item.quantity }}" value="1" required>
                 <input type="submit" value="Buy">
               </form>
             {% else %}
@@ -98,10 +98,13 @@
           <form action="/item/{{ item.id }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
             <input type="hidden" name="item_id" value="{{ item.id }}">
-            <textarea name="content" rows="4" cols="50" required></textarea><br>
-            <label for="rating">Rating (1 to 5):</label>
-            <input type="number" name="rating" min="1" max="5" required><br>
-            <input type="submit" value="Add Comment">
+            <label for="content"></label><br>
+            <textarea id="content" name="content" rows="4" cols="50" required></textarea><br>
+            <div class="form-group">
+              <label for="rating">Rating (1 to 5):</label>
+              <input id="rating" type="number" name="rating" min="1" max="5" required>
+              <input type="submit" value="Add Comment">
+            </div>  
           </form>
         {% endif %}
       {% endif %}

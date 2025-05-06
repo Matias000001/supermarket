@@ -650,6 +650,13 @@ ul.content .item-class {
     word-break: break-word;
 }
 
+.form-group {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 1em;
+  }
+  
+
 .comment strong {
     color: #333;
 }
