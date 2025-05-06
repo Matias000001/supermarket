@@ -2,7 +2,6 @@
 
 import os
 import re
-import random
 import secrets
 import time
 import sqlite3
