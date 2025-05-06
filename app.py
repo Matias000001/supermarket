@@ -31,12 +31,7 @@ import basket
 
 # Initialize the Flask app
 app = Flask(__name__)
-app.secret_key = config.SECRET_KEY
-
-
-# Encryption key setup
-with open("keyfile.key", "rb") as key_file:
-    key = key_file.read()
+app.secret_key = config.secret_key
 
 
 # Logging
@@ -49,13 +44,6 @@ def check_csrf():
         abort(403)
 
 
-# Upload configuration
-UPLOAD_FOLDER = "static/uploads"
-
-
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-
 # Session security settings
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -63,11 +51,6 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Strict",
     PERMANENT_SESSION_LIFETIME=10000
 )
-
-
-# Ensure upload directory exists
-if not os.path.exists(app.config["UPLOAD_FOLDER"]):
-    os.makedirs(app.config["UPLOAD_FOLDER"])
 
 
 def require_login():
