@@ -7,17 +7,6 @@
   <title>Messages</title>
 </head>
 <body>
-  {% if session.username %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-          {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-          {% endfor %}
-          {% set _ = get_flashed_messages() %}
-        </ul>
-      {% endif %}
-    {% endwith %}
     <div class="header">
       <h2>SUPERMARKET <span style="font-size: 0.6em;">({{ session['username'] }})</span></h2>
     </div>
@@ -35,6 +24,17 @@
       </nav>
     </div>
     <h2>Messages</h2>
+    {% if session.username %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+          {% set _ = get_flashed_messages() %}
+        </ul>
+      {% endif %}
+    {% endwith %}
     {% if not conversations %}
       <p>No messages</p>
     {% else %}

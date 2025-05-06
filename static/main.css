@@ -136,7 +136,7 @@ nav li:not(:first-of-type) {
 .message-content {
     word-wrap: break-word;
     overflow-wrap: break-word;
-    white-space: pre-wrap;
+    white-space: normal;
     background-color: #ffffff;
     padding: 0.5em;
     border: 1px solid #ccc;
@@ -645,6 +645,9 @@ ul.content .item-class {
 
 .comment p {
     margin: 0.2em 0;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .comment strong {
