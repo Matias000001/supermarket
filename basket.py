@@ -29,9 +29,19 @@ def get_cart(user_id):
 
 
 def checkout(user_id):
-    """Marks all pending cart items as paid for a given user."""
-    sql = "UPDATE purchases SET status = 'paid' WHERE user_id = ? AND status = 'pending'"
+    """Completes checkout: marks purchases as paid and updates stock."""
+    sql = """SELECT p.item_id, p.quantity
+             FROM purchases p
+             WHERE p.user_id = ? AND p.status = 'pending'"""
+    purchases = db.query(sql, [user_id])
+
+    for item_id, qty in purchases:
+        sql_update = "UPDATE items SET quantity = quantity - ? WHERE id = ? AND quantity >= ?"
+        db.execute(sql_update, [qty, item_id, qty])
+
+    sql = "UPDATE purchases SET status='paid' WHERE user_id=? AND status='pending'"
     db.execute(sql, [user_id])
+
 
 
 def get_quantities(product_ids):

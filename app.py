@@ -238,7 +238,7 @@ def update_item():
         image_data = new_image_file.read()
     elif remove_image:
         image_data = b""
-    items.update_item(item_id, title, description, classes, price, quantity, image_data)
+    items.update_item(item_id, title, description, classes, quantity, price, image_data)
     flash("Item updated successfully.", "success")
     return redirect(f"/item/{item_id}")
 
@@ -475,8 +475,26 @@ def register():
         username = request.form["username"]
         password1 = request.form["password1"]
         password2 = request.form["password2"]
+        # FIXED
+        """Validates the registration form inputs and creates a new user if valid."""
+        if not username:
+            flash("Username cannot be empty", "error")
+            return render_template("register.html", filled={})
+
         if len(username) > 16:
-            flash("Too long username! Must be under 16 characters")
+            flash("Username must be 1–16 characters long", "error")
+            return render_template("register.html", filled={})
+
+        if not password1 or not password2:
+            flash("Password cannot be empty", "error")
+            return render_template("register.html", filled={"username": username})
+
+        if len(password1) < 8 or len(password1) > 64:
+            flash("Password must be 8-64 characters long", "error")
+            return render_template("register.html", filled={"username": username})
+
+        if not re.search(r"[A-Za-z]", password1) or not re.search(r"[0-9]", password1):
+            flash("Password must contain both letters and numbers", "error")
             return render_template("register.html", filled={"username": username})
         if password1 != password2:
             flash("Passwords do not match", "error")
@@ -551,10 +569,15 @@ def create_purchase():
     seller_id = request.form["seller_id"]
     if not re.match("^[1-9][0-9]*$", quantity):
         abort(403)
+    quantity = int(quantity)
+    if item["quantity"] < quantity:
+        flash("Not enough items in stock", "error")
+        return redirect(f"/item/{item_id}")
     user_id = session["id"]
     items.add_purchase(item_id, user_id, seller_id, price, quantity)
-    flash(f"Product added to cart({quantity} kpl)", category="success")
+    flash(f"Product added to cart ({quantity} kpl)", category="success")
     return redirect("/item/" + str(item_id))
+
 
 
 @app.route("/update_basket", methods=["POST"])

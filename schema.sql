@@ -17,6 +17,7 @@ CREATE TABLE items (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL DEFAULT 1 CHECK(quantity >= 0),
     image BLOB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
