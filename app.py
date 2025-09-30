@@ -168,10 +168,15 @@ def find_item():
     results_per_page = 10
     items_found = []
     items_classes = {}
+    no_results = False
+
     if query:
         items_found = items.find_items(query, page, results_per_page)
         total_results = items.get_total_count(query)
         page_count = (total_results + results_per_page - 1) // results_per_page
+        if total_results == 0:
+            no_results = True
+            page_count = 1
         for item in items_found:
             item_id = item["id"]
             item_classes = items.get_classes(item_id)
@@ -179,8 +184,10 @@ def find_item():
     else:
         query = ""
         page_count = 0
+
     return render_template("find_item.html", query=query, results=items_found,
-                           items_classes=items_classes, page=page, page_count=page_count)
+                           items_classes=items_classes, page=page, page_count=page_count,
+                           no_results=no_results)
 
 
 @app.route("/new_item")
