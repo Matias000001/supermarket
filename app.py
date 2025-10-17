@@ -446,12 +446,7 @@ def login():
 @app.route("/logout")
 def logout():
     """Logs the user out and redirects to the homepage."""
-    if "username" in session:
-        del session["id"]
-        del session["username"]
-        del session["csrf_token"]
-    if "username" in session:
-        session.clear()
+    session.clear()
     return redirect("/")
 
 
