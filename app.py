@@ -595,7 +595,7 @@ def update_basket():
     quantities = basket.get_quantities(product_ids)
     quantities_dict = {item["id"]: item["quantity"] for item in quantities}
     for purchase in purchases:
-        quantity = request.form.get(f"quantity_{purchase["purchase_id"]}")
+        quantity = request.form.get(f"quantity_{purchase['purchase_id']}")
         if quantity:
             quantity = int(quantity)
             max_quantity = quantities_dict.get(purchase["item_id"])
