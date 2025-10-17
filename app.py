@@ -403,23 +403,6 @@ def validate_form_data(data):
         raise ValueError("Invalid quantity (1-9999)")
 
 
-def new_image_upload(file):
-    """Handles the upload of a new image for an item, ensuring it"s valid and saved."""
-    if not file or not file.filename:
-        return None
-    if not file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
-        raise ValueError("Allowed formats: .jpg, .jpeg, .png, .webp")
-    file.seek(0, os.SEEK_END)
-    if file.tell() > 2 * 1024 * 1024:
-        raise ValueError("Too big size! (max 2MB)")
-    file.seek(0)
-    filename_base = f"item_{int(time.time())}"
-    file_ext = secure_filename(file.filename).rsplit(".", maxsplit=1)[-1]
-    image_filename = f"{filename_base}.{file_ext}"
-    file.save(os.path.join(UPLOAD_FOLDER, image_filename))
-    return image_filename
-
-
 def parse_classes(class_list):
     """Parses and validates class entries for an item."""
     classes = []
