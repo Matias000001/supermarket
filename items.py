@@ -83,8 +83,12 @@ def get_item(item_id):
 # Updates an item's details
 def update_item(item_id, title, description, classes, quantity, price, image=None):
     """Updates the details of an item in the database, including the image as BLOB."""
-    sql = "UPDATE items SET title=?, description=?, quantity=?, price=?, image=? WHERE id=?"
-    db.execute(sql, [title, description, quantity, price, image, item_id])
+    if image is not None:
+        sql = "UPDATE items SET title=?, description=?, quantity=?, price=?, image=? WHERE id=?"
+        db.execute(sql, [title, description, quantity, price, image, item_id])
+    else:
+        sql = "UPDATE items SET title=?, description=?, quantity=?, price=? WHERE id=?"
+        db.execute(sql, [title, description, quantity, price, item_id])
     sql = "DELETE FROM item_classes WHERE item_id=?"
     db.execute(sql, [item_id])
     sql = "INSERT INTO item_classes (item_id, title, value) VALUES (?, ?, ?)"
