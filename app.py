@@ -474,49 +474,45 @@ def logout():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Handles user registration. Renders the registration page (GET) or processes
-       the form (POST)."""
     if request.method == "GET":
         return render_template("register.html", filled={})
     if request.method == "POST":
         username = request.form["username"]
         password1 = request.form["password1"]
         password2 = request.form["password2"]
-        # FIXED
-        """Validates the registration form inputs and creates a new user if valid."""
+
+        errors = []
+
         if not username:
-            flash("Username cannot be empty", "error")
-            return render_template("register.html", filled={})
-
+            errors.append("Username cannot be empty")
         if len(username) > 16:
-            flash("Username must be 1–16 characters long", "error")
-            return render_template("register.html", filled={})
-
+            errors.append("Username must be 1–16 characters long")
         if not password1 or not password2:
-            flash("Password cannot be empty", "error")
-            return render_template("register.html", filled={"username": username})
-
+            errors.append("Password cannot be empty")
         if len(password1) < 8 or len(password1) > 64:
-            flash("Password must be 8-64 characters long", "error")
+            errors.append("Password must be 8–64 characters long")
+        if not re.search(r"[A-Za-z]", password1) or not re.search(r"[0-9]", password1):
+            errors.append("Password must contain both letters and numbers")
+        if password1 != password2:
+            errors.append("Passwords do not match")
+
+        if errors:
+            for e in errors:
+                flash(e, "error")
             return render_template("register.html", filled={"username": username})
 
-        if not re.search(r"[A-Za-z]", password1) or not re.search(r"[0-9]", password1):
-            flash("Password must contain both letters and numbers", "error")
-            return render_template("register.html", filled={"username": username})
-        if password1 != password2:
-            flash("Passwords do not match", "error")
-            return render_template("register.html", filled={"username": username})
         try:
             users.create_user(username, password1)
             flash("Registration successful! Please login.", "success")
             return redirect(url_for("login"))
         except sqlite3.IntegrityError:
             flash("Username already taken", "error")
-            return render_template("register.html", filled={"username": username})
         except sqlite3.OperationalError:
             flash("Database busy, please try again", "error")
-            return render_template("register.html", filled={"username": username})
+
+        return render_template("register.html", filled={"username": username})
     abort(405)
+
 
 
 @app.route("/messages")
