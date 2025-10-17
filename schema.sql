@@ -13,7 +13,7 @@ CREATE TABLE items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT,
-    price INTEGER NOT NULL CHECK(price >= 0),
+    price REAL NOT NULL CHECK(price >= 0),
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL DEFAULT 1 CHECK(quantity >= 0),
     image BLOB,
@@ -65,7 +65,7 @@ CREATE TABLE purchases (
     item_id INTEGER REFERENCES items,
     user_id INTEGER REFERENCES users,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    price_at_purchase INTEGER NOT NULL,
+    price_at_purchase REAL NOT NULL,
     purchased_at TEXT DEFAULT CURRENT_TIMESTAMP,
     status TEXT CHECK (status IN ('pending', 'paid', 'shipped', 'delivered')) DEFAULT 'pending',
     seller_id INTEGER REFERENCES users(id)

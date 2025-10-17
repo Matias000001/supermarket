@@ -359,8 +359,8 @@ def create_item():
         items.add_item(
             title=form_data["title"],
             description=form_data["description"],
-            price=int(form_data["price"]),
-            quantity=int(form_data["quantity"]),
+            price=float(form_data["price"]),
+            quantity=float(form_data["quantity"]),
             user_id=user_id,
             classes=classes,
             image=image_data
@@ -397,8 +397,8 @@ def validate_form_data(data):
         raise ValueError("Title must be 1-50 characters long")
     if not 0 < len(data["description"]) <= 1000:
         raise ValueError("Description must be 1-1000 characters.")
-    if not re.fullmatch(r"^[1-9][0-9]{0,4}$", data["price"]):
-        raise ValueError("Invalid price (1-99999)")
+    if not re.fullmatch(r"^[0-9]+(\.[0-9]{1,2})?$", data["price"]):
+        raise ValueError("Invalid price format (e.g. 9.99)")
     if not data["quantity"].isdigit() or not 1 <= int(data["quantity"]) <= 9999:
         raise ValueError("Invalid quantity (1-9999)")
 
